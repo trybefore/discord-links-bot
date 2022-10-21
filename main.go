@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -49,6 +50,8 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
+	go startHealthCheck()
+
 	go func(s *session.Session) {
 		for msg := range queue {
 			go replaceMessage(s, msg)
@@ -57,6 +60,17 @@ func main() {
 
 	<-c
 	close(queue)
+}
+
+func startHealthCheck() {
+	http.HandleFunc("/health_check", getHealth)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func replaceMessage(s *session.Session, m message) {
