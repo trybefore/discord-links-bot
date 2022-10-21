@@ -16,9 +16,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err)
-	}
+	_ = godotenv.Load()
 
 	var token = os.Getenv("BOT_TOKEN")
 
