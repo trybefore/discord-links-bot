@@ -64,7 +64,7 @@ func main() {
 
 func startHealthCheck() {
 	http.HandleFunc("/health_check", getHealth)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("HEALTHCHECK_PORT"), nil); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -76,7 +76,7 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 func replaceMessage(s *session.Session, m message) {
 
 	newMessage := fmt.Sprintf(`from: %s
-	%s
+%s
 	`, m.author.Mention(), strings.Replace(m.content.Content, "https://twitter.com", "https://fxtwitter.com", 1))
 
 	_, err := s.SendMessage(m.content.ChannelID, newMessage)
