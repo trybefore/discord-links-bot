@@ -93,11 +93,24 @@ func createOutput(m message) string {
 	return strings.Join(links, "\n")
 }
 
+func createMentions(m message) string {
+	if mentions := m.content.Mentions; len(mentions) > 0 {
+		out := make([]string, len(mentions))
+		for i := 0; i < len(out); i++ {
+			out[i] = mentions[i].Tag()
+		}
+		return "\nmentioned: " + strings.Join(out, ", ")
+	}
+	return ""
+}
+
 func replaceMessage(s *session.Session, m message) {
 	output := createOutput(m)
-	newMessage := fmt.Sprintf(`from: %s
+	mentions := createMentions(m)
+
+	newMessage := fmt.Sprintf(`from: %s%s
 %s
-	`, m.author.Mention(), output)
+	`, m.author.Mention(), mentions, output)
 
 	_, err := s.SendMessage(m.content.ChannelID, newMessage)
 	if err != nil {
