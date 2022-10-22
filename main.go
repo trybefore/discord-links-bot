@@ -124,11 +124,10 @@ func replaceMessage(s *session.Session, m message) {
 	//mentions := createMentions(m)
 	hideEmbeds(s, m)
 
-	newMessage := fmt.Sprintf(`from: %s
-%s
-	`, m.author.Mention() /*mentions,*/, output)
+	newMessage := fmt.Sprintf(`%s` /*mentions,*/, output)
 
-	_, err := s.SendMessage(m.content.ChannelID, newMessage)
+	_, err := s.SendMessageReply(m.content.ChannelID, newMessage, m.content.ID)
+	//_, err := s.SendMessage(m.content.ChannelID, newMessage)
 	if err != nil {
 		log.Println("error sending message:", err)
 	}
