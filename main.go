@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/api"
@@ -15,6 +16,8 @@ import (
 	"github.com/diamondburned/arikawa/v3/session"
 	"github.com/joho/godotenv"
 )
+
+var twitterRegex = regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`)
 
 func main() {
 	_ = godotenv.Load()
@@ -30,7 +33,7 @@ func main() {
 	queue := make(chan message)
 
 	s.AddHandler(func(c *gateway.MessageCreateEvent) {
-		if strings.HasPrefix(c.Message.Content, "https://twitter.com") {
+		if twitterRegex.MatchString(c.Content) {
 			queue <- message{
 				content: c.Message,
 				author:  c.Author,
@@ -73,11 +76,28 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func replaceMessage(s *session.Session, m message) {
+func createOutput(m message) string {
+	matches := twitterRegex.FindAllString(m.content.Content, -1)
 
+	if matches == nil {
+		return "" // ?
+	}
+
+	links := make([]string, len(matches))
+
+	for i := 0; i < len(links); i++ {
+		m := matches[i]
+		links[i] = twitterRegex.ReplaceAllString(m, "https://fxtwitter.com/$2/status/$4")
+	}
+
+	return strings.Join(links, "\n")
+}
+
+func replaceMessage(s *session.Session, m message) {
+	output := createOutput(m)
 	newMessage := fmt.Sprintf(`from: %s
 %s
-	`, m.author.Mention(), strings.Replace(m.content.Content, "https://twitter.com", "https://fxtwitter.com", 1))
+	`, m.author.Mention(), output)
 
 	_, err := s.SendMessage(m.content.ChannelID, newMessage)
 	if err != nil {
