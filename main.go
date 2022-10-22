@@ -93,6 +93,7 @@ func createOutput(m message) string {
 	return strings.Join(links, "\n")
 }
 
+/*
 func createMentions(m message) string {
 	if mentions := m.content.Mentions; len(mentions) > 0 {
 		out := make([]string, len(mentions))
@@ -102,23 +103,39 @@ func createMentions(m message) string {
 		return "\nmentioned: " + strings.Join(out, ", ")
 	}
 	return ""
+}*/
+
+func hideEmbeds(s *session.Session, m message) {
+	oldFlags := m.content.Flags
+	newFlags := oldFlags | discord.SuppressEmbeds
+
+	editMsgData := api.EditMessageData{
+		Flags: &newFlags,
+	}
+
+	_, err := s.EditMessageComplex(m.content.ChannelID, m.content.ID, editMsgData)
+	if err != nil {
+		log.Println("error editing message:", err)
+	}
 }
 
 func replaceMessage(s *session.Session, m message) {
 	output := createOutput(m)
-	mentions := createMentions(m)
+	//mentions := createMentions(m)
+	hideEmbeds(s, m)
 
-	newMessage := fmt.Sprintf(`from: %s%s
+	newMessage := fmt.Sprintf(`from: %s
 %s
-	`, m.author.Mention(), mentions, output)
+	`, m.author.Mention() /*mentions,*/, output)
 
 	_, err := s.SendMessage(m.content.ChannelID, newMessage)
 	if err != nil {
 		log.Println("error sending message:", err)
 	}
-	if err = s.DeleteMessage(m.content.ChannelID, m.content.ID, api.AuditLogReason("fxtwitterbot")); err != nil {
+
+	/*if err = s.DeleteMessage(m.content.ChannelID, m.content.ID, api.AuditLogReason("fxtwitterbot")); err != nil {
 		log.Println("error deleting message:", err)
-	}
+	}*/
 }
 
 type message struct {
