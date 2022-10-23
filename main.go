@@ -76,8 +76,8 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createOutput(m message) string {
-	matches := twitterRegex.FindAllString(m.content.Content, -1)
+func createOutput(msg message) string {
+	matches := twitterRegex.FindAllString(msg.content.Content, -1)
 
 	if matches == nil {
 		return "" // ?
@@ -87,23 +87,16 @@ func createOutput(m message) string {
 
 	for i := 0; i < len(links); i++ {
 		m := matches[i]
-		links[i] = twitterRegex.ReplaceAllString(m, "https://fxtwitter.com/$2/status/$4")
+		link := twitterRegex.ReplaceAllString(m, "https://fxtwitter.com/$2/status/$4")
+		if strings.Contains(msg.content.Content, "||") {
+			link = fmt.Sprintf("||%s||", link)
+		}
+
+		links[i] = link
 	}
 
 	return strings.Join(links, "\n")
 }
-
-/*
-func createMentions(m message) string {
-	if mentions := m.content.Mentions; len(mentions) > 0 {
-		out := make([]string, len(mentions))
-		for i := 0; i < len(out); i++ {
-			out[i] = mentions[i].Tag()
-		}
-		return "\nmentioned: " + strings.Join(out, ", ")
-	}
-	return ""
-}*/
 
 func hideEmbeds(s *session.Session, m message) {
 	oldFlags := m.content.Flags
