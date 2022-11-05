@@ -1,9 +1,9 @@
 name: ci
 
 on:
-  push:
+  [push, workflow_dispatch]:
     branches:
-      - 'main'
+      - 'master'
 
 jobs:
   docker:
