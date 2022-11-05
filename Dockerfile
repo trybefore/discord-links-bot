@@ -1,5 +1,8 @@
 FROM golang:1.18-alpine
 
+RUN apk add --no-cache tzdata
+ENV TZ=Europe/Stockholm
+
 WORKDIR /app 
 
 COPY go.mod ./ 
@@ -12,6 +15,6 @@ RUN go build -o /fxdiscordbot
 
 EXPOSE 8080 
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD [ "curl", "--fail", "http://localhost:8080", "||", "exit 1"]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080 || exit 1
 
 CMD ["/fxdiscordbot"]
