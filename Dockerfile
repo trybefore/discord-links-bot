@@ -12,4 +12,6 @@ RUN go build -o /fxdiscordbot
 
 EXPOSE 8080 
 
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "curl", "--fail", "http://localhost:8080", "||", "exit 1"]
+
 CMD ["/fxdiscordbot"]
