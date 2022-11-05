@@ -1,20 +1,34 @@
-FROM golang:1.18-alpine
+#build binary
 
+FROM golang:1.18-alpine AS builder
+
+RUN apk --update upgrade && apk add --no-cache git make build-base && rm -rf /var/cache/apk/*
+
+ENV GO111MODULE=on
+
+RUN mkdir /app
+WORKDIR /app
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+ARG buildOptions
+
+RUN env ${buildOptions} go build -ldflags="-w -s" -o /go/bin/fxdiscordbot .
+
+#optimized build
+
+FROM alpine
 RUN apk add --no-cache tzdata
 ENV TZ=Europe/Stockholm
+COPY --from=builder /go/bin/fxdiscordbot /go/bin/fxdiscordbot
 
-WORKDIR /app 
+RUN apk --update upgrade && apk add --no-cache ca-certificates && update-ca-certificates 2>/dev/null || true && rm -rf /var/cache/apk/*
 
-COPY go.mod ./ 
-COPY go.sum ./ 
-RUN go mod download 
-
-COPY *.go ./ 
-
-RUN go build -o /fxdiscordbot
-
-EXPOSE 8080 
-
+EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080 || exit 1
 
-CMD ["/fxdiscordbot"]
+ENTRYPOINT ["/go/bin/fxdiscordbot"]
