@@ -23,12 +23,13 @@ RUN env ${buildOptions} go build -ldflags="-w -s" -o /go/bin/fxdiscordbot .
 
 FROM alpine
 RUN apk add --no-cache tzdata
+RUN apk add --no-cache curl
 ENV TZ=Europe/Stockholm
 COPY --from=builder /go/bin/fxdiscordbot /go/bin/fxdiscordbot
 
 RUN apk --update upgrade && apk add --no-cache ca-certificates && update-ca-certificates 2>/dev/null || true && rm -rf /var/cache/apk/*
 
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080 || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080/health_check || exit 1
 
 ENTRYPOINT ["/go/bin/fxdiscordbot"]
