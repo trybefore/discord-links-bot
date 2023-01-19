@@ -13,10 +13,16 @@ import (
 var replacers []replacer
 
 func init() {
-	replacers = append(replacers, &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
-		replacement: "https://fxtwitter.com/$2/status/$4",
-	})
+	replacers = append(replacers,
+		&genericReplacer{
+			regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+			replacement: "https://fxtwitter.com/$2/status/$4",
+		},
+		&genericReplacer{
+			regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*)`),
+			replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
+		},
+	)
 }
 
 type replacer interface {
