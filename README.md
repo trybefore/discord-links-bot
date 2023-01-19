@@ -1,3 +1,8 @@
-# fxdiscordbot
+# discord-links-bot
 
-Replaces Twitter links posted in Discord with fxTwitter links because Twitter videos only load 50% of the time.
+A discord bot for replacing/trimming common links with more appropriate versions
+
+## Supported links
+- twitter links are replaced with fxtwitter links
+
+
