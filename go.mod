@@ -1,4 +1,4 @@
-module github.com/trybefore/fxdiscordbot
+module github.com/trybefore/linksbot
 
 go 1.18
 

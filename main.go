@@ -2,13 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
-	"strings"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -16,8 +13,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/session"
 	"github.com/joho/godotenv"
 )
-
-var twitterRegex = regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`)
 
 func main() {
 	_ = godotenv.Load()
@@ -33,10 +28,11 @@ func main() {
 	queue := make(chan message)
 
 	s.AddHandler(func(c *gateway.MessageCreateEvent) {
-		if twitterRegex.MatchString(c.Content) {
+		if replacers := findReplacers(c.Message); len(replacers) > 0 {
 			queue <- message{
-				content: c.Message,
-				author:  c.Author,
+				content:   c.Message,
+				author:    c.Author,
+				replacers: &replacers,
 			}
 		}
 	})
@@ -76,28 +72,6 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func createOutput(msg message) string {
-	matches := twitterRegex.FindAllString(msg.content.Content, -1)
-
-	if matches == nil {
-		return "" // ?
-	}
-
-	links := make([]string, len(matches))
-
-	for i := 0; i < len(links); i++ {
-		m := matches[i]
-		link := twitterRegex.ReplaceAllString(m, "https://fxtwitter.com/$2/status/$4")
-		if strings.Contains(msg.content.Content, "||") {
-			link = fmt.Sprintf("||%s||", link)
-		}
-
-		links[i] = link
-	}
-
-	return strings.Join(links, "\n")
-}
-
 func hideEmbeds(s *session.Session, m message) {
 	oldFlags := m.content.Flags
 	newFlags := oldFlags | discord.SuppressEmbeds
@@ -112,25 +86,8 @@ func hideEmbeds(s *session.Session, m message) {
 	}
 }
 
-func replaceMessage(s *session.Session, m message) {
-	output := createOutput(m)
-	//mentions := createMentions(m)
-	hideEmbeds(s, m)
-
-	newMessage := fmt.Sprintf(`%s` /*mentions,*/, output)
-
-	_, err := s.SendMessageReply(m.content.ChannelID, newMessage, m.content.ID)
-	//_, err := s.SendMessage(m.content.ChannelID, newMessage)
-	if err != nil {
-		log.Println("error sending message:", err)
-	}
-
-	/*if err = s.DeleteMessage(m.content.ChannelID, m.content.ID, api.AuditLogReason("fxtwitterbot")); err != nil {
-		log.Println("error deleting message:", err)
-	}*/
-}
-
 type message struct {
-	content discord.Message
-	author  discord.User
+	content   discord.Message
+	author    discord.User
+	replacers *[]replacer
 }
