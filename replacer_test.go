@@ -6,10 +6,10 @@ import (
 )
 
 func TestTwitterRegex(t *testing.T) {
-	replacer := &twitterReplacer{regex: regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`)}
+	replacer := &genericReplacer{regex: regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`), replacement: "https://fxtwitter.com/$2/status/$4"}
 
 	tests := []struct {
-		replacer *twitterReplacer
+		replacer *genericReplacer
 		want     string
 		have     string
 	}{
@@ -26,6 +26,11 @@ func TestTwitterRegex(t *testing.T) {
 		{
 			replacer: replacer,
 			have:     "https://twitter.com/blablabla/statuses/12345678910?cheese=doodles",
+			want:     "https://fxtwitter.com/blablabla/status/12345678910",
+		},
+		{
+			replacer: replacer,
+			have:     "http://twitter.com/blablabla/statuses/12345678910",
 			want:     "https://fxtwitter.com/blablabla/status/12345678910",
 		},
 	}

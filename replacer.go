@@ -13,8 +13,9 @@ import (
 var replacers []replacer
 
 func init() {
-	replacers = append(replacers, &twitterReplacer{
-		regex: regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+	replacers = append(replacers, &genericReplacer{
+		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+		replacement: "https://fxtwitter.com/$2/status/$4",
 	})
 }
 
@@ -23,17 +24,18 @@ type replacer interface {
 	Matches(string) bool
 }
 
-var _ replacer = (*twitterReplacer)(nil)
+var _ replacer = (*genericReplacer)(nil)
 
-type twitterReplacer struct {
-	regex *regexp.Regexp
+type genericReplacer struct {
+	regex       *regexp.Regexp
+	replacement string
 }
 
-func (t *twitterReplacer) Replace(msg string) string {
-	return replaceMatches(t.regex, msg, "https://fxtwitter.com/$2/status/$4")
+func (t *genericReplacer) Replace(msg string) string {
+	return replaceMatches(t.regex, msg, t.replacement)
 }
 
-func (t *twitterReplacer) Matches(msg string) bool {
+func (t *genericReplacer) Matches(msg string) bool {
 	return t.regex.MatchString(msg)
 }
 
