@@ -5,7 +5,9 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/session"
 )
@@ -94,7 +96,21 @@ func ReplaceAll(m message) string {
 
 	return outputMessage
 }
+func hideEmbeds(s *session.Session, m message) {
+	time.AfterFunc(time.Second*3, func() {
+		oldFlags := m.content.Flags
+		newFlags := oldFlags | discord.SuppressEmbeds
 
+		editMsgData := api.EditMessageData{
+			Flags: &newFlags,
+		}
+
+		_, err := s.EditMessageComplex(m.content.ChannelID, m.content.ID, editMsgData)
+		if err != nil {
+			log.Println("error editing message:", err)
+		}
+	})
+}
 func replaceMessage(s *session.Session, m message) {
 	output := ReplaceAll(m)
 
