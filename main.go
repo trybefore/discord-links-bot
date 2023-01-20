@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -13,8 +14,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var Commit = func() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				return setting.Value
+			}
+		}
+	}
+	return ""
+}()
+
 func main() {
 	_ = godotenv.Load()
+
+	log.Printf("discord-links-bot commit %s", Commit)
 
 	var token = os.Getenv("BOT_TOKEN")
 
