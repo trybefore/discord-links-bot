@@ -12,17 +12,25 @@ import (
 
 var replacers []replacer
 
+var (
+	amazonReplacer = &genericReplacer{
+		regex:       regexp.MustCompile(`https?:\/\/(.*)\.amazon\.(de|com|co\.uk).*\/dp\/(\w*)`),
+		replacement: "https://$1.amazon.$2/dp/$3",
+	}
+	twitterReplacer = &genericReplacer{
+		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+		replacement: "https://fxtwitter.com/$2/status/$4",
+	}
+	discordReplacer = &genericReplacer{
+		regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*)`),
+		replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
+	}
+)
+
 func init() {
-	replacers = append(replacers,
-		&genericReplacer{
-			regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
-			replacement: "https://fxtwitter.com/$2/status/$4",
-		},
-		&genericReplacer{
-			regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*)`),
-			replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
-		},
-	)
+	replacers = append(replacers, amazonReplacer)
+	replacers = append(replacers, twitterReplacer)
+	replacers = append(replacers, discordReplacer)
 }
 
 type replacer interface {
