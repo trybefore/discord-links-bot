@@ -28,4 +28,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: trybefore/fxdiscordbot:latest
+          tags: trybefore/discord-links-bot:latest
