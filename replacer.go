@@ -115,9 +115,13 @@ func replaceMessage(s *session.Session, m message) {
 	output := ReplaceAll(m)
 
 	hideEmbeds(s, m)
-
-	_, err := s.SendMessageReply(m.content.ChannelID, output, m.content.ID)
-	if err != nil {
-		log.Println("error sending message:", err)
+	if _, err := s.SendMessageComplex(m.content.ChannelID, api.SendMessageData{
+		Content:         output,
+		AllowedMentions: &api.AllowedMentions{},
+		Reference: &discord.MessageReference{
+			MessageID: m.content.ID,
+		},
+	}); err != nil {
+		log.Println("error sending reply message:", err)
 	}
 }
