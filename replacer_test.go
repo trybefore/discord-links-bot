@@ -5,6 +5,30 @@ import (
 	"testing"
 )
 
+func TestYoutubeShortsRegex(t *testing.T) {
+	tests := []struct {
+		want string
+		have string
+	}{
+		{
+			have: "https://www.youtube.com/shorts/u3juys4lq-E",
+			want: "https://www.youtube.com/watch?v=u3juys4lq-E",
+		},
+		{
+			have: "https://youtube.com/shorts/u3juys4lq-E",
+			want: "https://www.youtube.com/watch?v=u3juys4lq-E",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
+			if got := youtubeShortsReplacer.Replace(tt.have); got != tt.want {
+				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAmazonRegex(t *testing.T) {
 	tests := []struct {
 		want string
