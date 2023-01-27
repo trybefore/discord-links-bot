@@ -12,7 +12,9 @@ import (
 	"github.com/diamondburned/arikawa/v3/session"
 )
 
-var replacers []replacer
+var replacers []replacer = []replacer{
+	amazonReplacer, twitterReplacer, discordReplacer, youtubeShortsReplacer,
+}
 
 var (
 	amazonReplacer = &genericReplacer{
@@ -27,13 +29,12 @@ var (
 		regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*)`),
 		replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
 	}
-)
 
-func init() {
-	replacers = append(replacers, amazonReplacer)
-	replacers = append(replacers, twitterReplacer)
-	replacers = append(replacers, discordReplacer)
-}
+	youtubeShortsReplacer = &genericReplacer{
+		regex:       regexp.MustCompile(`https?:\/\/(?:www.)?youtube.com\/shorts\/(\w.*)`),
+		replacement: "https://www.youtube.com/watch?v=$1",
+	}
+)
 
 type replacer interface {
 	Replace(string) string
