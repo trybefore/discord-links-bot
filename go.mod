@@ -1,6 +1,6 @@
 module github.com/trybefore/linksbot
 
-go 1.18
+go 1.20
 
 require (
 	github.com/diamondburned/arikawa/v3 v3.1.0
