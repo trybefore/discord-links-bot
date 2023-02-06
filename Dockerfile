@@ -32,4 +32,4 @@ RUN apk --update upgrade && apk add --no-cache ca-certificates && update-ca-cert
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080/health_check || exit 1
 
-ENTRYPOINT ["/go/bin/linksbot"]
+ENTRYPOINT ["/go/bin/linksbot", "run"]

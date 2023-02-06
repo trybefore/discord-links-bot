@@ -1,4 +1,4 @@
-package main
+package replacer
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/session"
 )
 
-var replacers []replacer = []replacer{
+var replacers []Replacer = []Replacer{
 	amazonReplacer, twitterReplacer, discordReplacer, youtubeShortsReplacer,
 }
 
@@ -36,12 +36,12 @@ var (
 	}
 )
 
-type replacer interface {
+type Replacer interface {
 	Replace(string) string
 	Matches(string) bool
 }
 
-var _ replacer = (*genericReplacer)(nil)
+var _ Replacer = (*genericReplacer)(nil)
 
 type genericReplacer struct {
 	regex       *regexp.Regexp
@@ -56,7 +56,11 @@ func (t *genericReplacer) Matches(msg string) bool {
 	return t.regex.MatchString(msg)
 }
 
-func findReplacers(m discord.Message) (out []replacer) {
+func FindReplacers(m discord.Message) (out []Replacer) {
+	return findReplacers(m)
+}
+
+func findReplacers(m discord.Message) (out []Replacer) {
 	for _, replacer := range replacers {
 		if replacer.Matches(m.Content) {
 			out = append(out, replacer)
@@ -88,39 +92,39 @@ func replaceMatches(regex *regexp.Regexp, message, replacement string) string {
 	return strings.Join(links, "\n")
 }
 
-func ReplaceAll(m message) string {
-	outputMessage := m.content.Content
+func ReplaceAll(m Message) string {
+	outputMessage := m.Content.Content
 
-	for _, replacer := range *m.replacers {
+	for _, replacer := range *m.Replacers {
 		outputMessage = replacer.Replace(outputMessage)
 	}
 
 	return outputMessage
 }
-func hideEmbeds(s *session.Session, m message) {
-	time.AfterFunc(time.Second*3, func() {
-		oldFlags := m.content.Flags
+func hideEmbeds(s *session.Session, m Message) {
+	time.AfterFunc(time.Second*2, func() {
+		oldFlags := m.Content.Flags
 		newFlags := oldFlags | discord.SuppressEmbeds
 
 		editMsgData := api.EditMessageData{
 			Flags: &newFlags,
 		}
 
-		_, err := s.EditMessageComplex(m.content.ChannelID, m.content.ID, editMsgData)
+		_, err := s.EditMessageComplex(m.Content.ChannelID, m.Content.ID, editMsgData)
 		if err != nil {
 			log.Println("error editing message:", err)
 		}
 	})
 }
-func replaceMessage(s *session.Session, m message) {
+func ReplaceMessage(s *session.Session, m Message) {
 	output := ReplaceAll(m)
 
 	hideEmbeds(s, m)
-	if _, err := s.SendMessageComplex(m.content.ChannelID, api.SendMessageData{
+	if _, err := s.SendMessageComplex(m.Content.ChannelID, api.SendMessageData{
 		Content:         output,
 		AllowedMentions: &api.AllowedMentions{},
 		Reference: &discord.MessageReference{
-			MessageID: m.content.ID,
+			MessageID: m.Content.ID,
 		},
 	}); err != nil {
 		log.Println("error sending reply message:", err)
