@@ -13,7 +13,7 @@ import (
 )
 
 var replacers []Replacer = []Replacer{
-	amazonReplacer, twitterReplacer, discordReplacer, youtubeShortsReplacer,
+	amazonReplacer, twitterReplacer, discordReplacer, youtubeShortsReplacer, redditShortsReplacer,
 }
 
 var (
@@ -33,6 +33,11 @@ var (
 	youtubeShortsReplacer = &genericReplacer{
 		regex:       regexp.MustCompile(`https?:\/\/(?:www.)?youtube.com\/shorts\/(\w.*)`),
 		replacement: "https://www.youtube.com/watch?v=$1",
+	}
+
+	redditShortsReplacer = &genericReplacer{
+		regex:       regexp.MustCompile(`http(s)?(.+)reddit\.com/(?:r/)?([^/]+)/(?:(comments\/))?(\w{5,9})`),
+		replacement: "https://www.reddit.com/$5",
 	}
 )
 
