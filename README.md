@@ -8,6 +8,7 @@ Message embeds are hidden when possible.
 - twitter links are replaced with fxtwitter links (bot hides original message's embed)
 - media.discordapp.net links are replaced with cdn.discordapp.com (bot does nothing to the original message, for now)
 - amazon product links are trimmed down to the bare minimum required to visit the product page (hides link embed)
+- reddit links are shortened to the bare minimum required to visit the submission (hides link embed)
 
 ### Examples
 
@@ -45,4 +46,14 @@ Turns into
 ```
 https://www.amazon.co.uk/dp/B09B1HMJ9Z
 https://www.amazon.com/dp/B09B1HMJ9Z
+```
+
+#### Reddit
+
+```
+https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+```
+Turns into
+```
+https://www.reddit.com/107nizk
 ```

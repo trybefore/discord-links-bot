@@ -5,6 +5,48 @@ import (
 	"testing"
 )
 
+func TestRedditRegex(t *testing.T) {
+	tests := []struct {
+		want string
+		have string
+	}{
+		{
+			have: "https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/#c867wpi",
+			want: "https://www.reddit.com/17j3sd",
+		},
+		{
+			have: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
+			want: "https://www.reddit.com/17863",
+		},
+		{
+			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
+			want: "https://www.reddit.com/u24xnc",
+		},
+		{
+			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+			`,
+			want: `https://www.reddit.com/107nizk`,
+		},
+		{
+			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+			https://www.reddit.com/r/truetf2/comments/asdf123/what_makes_a_lot_of_the_configuration/
+			https://www.reddit.com/r/truetf2/comments/test123/what_makes_a_lot_of_the_configuration/
+			`,
+			want: `https://www.reddit.com/107nizk
+https://www.reddit.com/asdf123
+https://www.reddit.com/test123`,
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
+			if got := redditShortsReplacer.Replace(tt.have); got != tt.want {
+				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestYoutubeShortsRegex(t *testing.T) {
 	tests := []struct {
 		want string
