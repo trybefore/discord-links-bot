@@ -9,3 +9,5 @@ const (
 	NorwayMentioned string = "noreg"
 	Guh             string = "guh"
 )
+
+var Commit string

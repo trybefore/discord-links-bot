@@ -14,7 +14,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/spf13/viper"
 	"github.com/trybefore/linksbot/internal/config"
-	"github.com/trybefore/linksbot/internal/debug"
 	"github.com/trybefore/linksbot/internal/replacer"
 )
 
@@ -40,7 +39,7 @@ func Run(ctx context.Context) error {
 		Activities: []discord.Activity{
 			{
 				Type: discord.CompetingActivity,
-				Name: debug.Commit,
+				Name: config.Commit,
 			},
 		},
 		Status: discord.OnlineStatus,
@@ -98,7 +97,7 @@ func Run(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("discord-links-bot running -- commit: %s", debug.Commit)
+	log.Printf("discord-links-bot running -- commit: %s", config.Commit)
 
 	defer botState.Close()
 

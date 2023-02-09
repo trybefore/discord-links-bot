@@ -17,7 +17,7 @@ COPY . .
 
 ARG buildOptions
 
-RUN env ${buildOptions} go build -ldflags="-w -s" -o /go/bin/linksbot .
+RUN env ${buildOptions} go build -ldflags="-w -s -X github.com/trybefore/linksbot/internal/config.Commit=$(git rev-parse --short HEAD)" -o /go/bin/linksbot .
 
 #optimized build
 

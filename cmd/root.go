@@ -10,12 +10,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/trybefore/linksbot/internal/config"
-	"github.com/trybefore/linksbot/internal/debug"
 )
 
 var rootCmd = &cobra.Command{
 	Use:     "linkbot",
-	Version: debug.Commit,
+	Version: config.Commit,
 }
 
 func Execute() {
@@ -26,12 +25,12 @@ func Execute() {
 }
 
 var configFile string
-var printViper bool
+var printDebug bool
 
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&configFile, config.ConfigFilePath, "", "path to a configuration file")
-	rootCmd.PersistentFlags().BoolVar(&printViper, config.Debug, false, "print all viper keys")
+	rootCmd.PersistentFlags().BoolVar(&printDebug, config.Debug, false, "print all viper keys")
 
 	if err := viper.BindPFlags(rootCmd.Flags()); err != nil {
 		log.Fatal(err)
@@ -55,8 +54,8 @@ func initConfig() {
 
 	viper.AutomaticEnv()
 
-	if printViper {
-		viper.Debug()
+	if printDebug {
+		log.Printf("commit: %s", config.Commit)
 	}
 
 	if err := viper.ReadInConfig(); err == nil {
