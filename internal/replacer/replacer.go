@@ -36,8 +36,8 @@ var (
 	}
 
 	redditShortsReplacer = &genericReplacer{
-		regex:       regexp.MustCompile(`http(s)?(.+)reddit\.com/(?:r/)?([^/]+)/(?:(comments\/))?(\w{5,9})`),
-		replacement: "https://www.reddit.com/$5",
+		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)?(?P<subreddit>[^/]+)/(?:(comments\/))?(?P<submission>\w{5,9})(?P<comment>/.*/\w{3,9}/)?`),
+		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
 )
 
