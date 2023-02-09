@@ -7,4 +7,5 @@ const (
 	ConfigFilePath  string = "config"
 
 	NorwayMentioned string = "noreg"
+	Guh             string = "guh"
 )

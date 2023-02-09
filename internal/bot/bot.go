@@ -6,18 +6,19 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
-	"github.com/diamondburned/arikawa/v3/session"
+	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/spf13/viper"
 	"github.com/trybefore/linksbot/internal/config"
 	"github.com/trybefore/linksbot/internal/debug"
 	"github.com/trybefore/linksbot/internal/replacer"
 )
 
-var botSession *session.Session
+var botState *state.State
 var messageQueue chan replacer.Message
 
 func Run(ctx context.Context) error {
@@ -32,14 +33,29 @@ func Run(ctx context.Context) error {
 
 	messageQueue = make(chan replacer.Message)
 
-	botSession = session.New(botToken)
+	identifier := gateway.DefaultIdentifier(botToken)
 
-	botSession.AddHandler(func(c *gateway.MessageCreateEvent) {
-		me, err := botSession.Me()
+	identifier.Presence = &gateway.UpdatePresenceCommand{
+		Since: discord.UnixMsTimestamp(time.Now().UnixMilli()),
+		Activities: []discord.Activity{
+			{
+				Type: discord.CompetingActivity,
+				Name: debug.Commit,
+			},
+		},
+		Status: discord.OnlineStatus,
+		AFK:    false,
+	}
+
+	botState = state.NewWithIdentifier(identifier)
+
+	botState.AddHandler(func(c *gateway.MessageCreateEvent) {
+		me, err := botState.Me()
 		if err != nil {
 			log.Printf("error finding myself: %v", err)
 			return
 		}
+
 		if me.ID == c.Author.ID {
 			return // ignore own messages
 		}
@@ -52,9 +68,17 @@ func Run(ctx context.Context) error {
 			}
 			return
 		}
-		if viper.GetBool(config.NorwayMentioned) && strings.Contains(strings.ToLower(c.Message.Content), "norway") {
-			if _, err := botSession.SendMessageComplex(c.Message.ChannelID, api.SendMessageData{
-				Content:         "https://cdn.discordapp.com/attachments/735399993485033472/1071891567389974608/x5Lqn.png",
+		msg := strings.ToLower(c.Message.Content)
+		msgContent := ""
+		if viper.GetBool(config.NorwayMentioned) && strings.Contains(msg, "norway") {
+			msgContent += "https://i.imgur.com/5msLOh4.png\n"
+		} else if viper.GetBool(config.Guh) && strings.Contains(msg, "guh") {
+			msgContent += "https://i.imgur.com/mJIDoiI.gif\n"
+		}
+
+		if msgContent != "" {
+			if _, err := botState.SendMessageComplex(c.Message.ChannelID, api.SendMessageData{
+				Content:         msgContent,
 				AllowedMentions: &api.AllowedMentions{},
 				Reference: &discord.MessageReference{
 					MessageID: c.Message.ID,
@@ -63,31 +87,34 @@ func Run(ctx context.Context) error {
 				log.Println("error sending reply message:", err)
 			}
 		}
+
 	})
 
-	botSession.AddIntents(gateway.IntentDirectMessages)
-	botSession.AddIntents(gateway.IntentGuildMessages)
+	botState.AddIntents(gateway.IntentGuilds)
+	botState.AddIntents(gateway.IntentDirectMessages)
+	botState.AddIntents(gateway.IntentGuildMessages)
 
-	if err := botSession.Open(ctx); err != nil {
+	if err := botState.Open(ctx); err != nil {
 		return err
 	}
 
 	log.Printf("discord-links-bot running -- commit: %s", debug.Commit)
 
-	defer botSession.Close()
+	defer botState.Close()
 
 	c := make(chan os.Signal, 1)
 
 	signal.Notify(c, os.Interrupt)
 
-	go func(s *session.Session) {
+	go func(s *state.State) {
 		for msg := range messageQueue {
 			go replacer.ReplaceMessage(s, msg)
 		}
-	}(botSession)
+	}(botState)
 
 	<-c
 	log.Printf("terminating signal received, stopping bot")
 	close(messageQueue)
-	return nil // TODO: implement
+
+	return nil
 }

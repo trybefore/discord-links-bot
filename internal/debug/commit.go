@@ -10,5 +10,5 @@ var Commit = func() string {
 			}
 		}
 	}
-	return ""
+	return "unknown"
 }()

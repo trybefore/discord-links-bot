@@ -9,7 +9,7 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/session"
+	"github.com/diamondburned/arikawa/v3/state"
 )
 
 var replacers []Replacer = []Replacer{
@@ -106,7 +106,7 @@ func ReplaceAll(m Message) string {
 
 	return outputMessage
 }
-func hideEmbeds(s *session.Session, m Message) {
+func hideEmbeds(s *state.State, m Message) {
 	time.AfterFunc(time.Second*2, func() {
 		oldFlags := m.Content.Flags
 		newFlags := oldFlags | discord.SuppressEmbeds
@@ -121,7 +121,7 @@ func hideEmbeds(s *session.Session, m Message) {
 		}
 	})
 }
-func ReplaceMessage(s *session.Session, m Message) {
+func ReplaceMessage(s *state.State, m Message) {
 	output := ReplaceAll(m)
 
 	hideEmbeds(s, m)
