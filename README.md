@@ -51,9 +51,9 @@ https://www.amazon.com/dp/B09B1HMJ9Z
 #### Reddit
 
 ```
-https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/?utm_medium=ios_app
 ```
 Turns into
 ```
-https://www.reddit.com/107nizk
+https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
 ```
