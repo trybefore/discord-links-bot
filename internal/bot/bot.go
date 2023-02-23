@@ -115,5 +115,5 @@ func Run(ctx context.Context) error {
 	log.Printf("terminating signal received, stopping bot")
 	close(messageQueue)
 
-	return nil
+	return context.Canceled
 }
