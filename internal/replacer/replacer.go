@@ -26,7 +26,7 @@ var (
 		replacement: "https://fxtwitter.com/$2/status/$4",
 	}
 	discordReplacer = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*)`),
+		regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*[^\.gif]$)`),
 		replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
 	}
 
@@ -54,6 +54,9 @@ type genericReplacer struct {
 }
 
 func (t *genericReplacer) Replace(msg string) string {
+	if !t.Matches(msg) {
+		return msg
+	}
 	return replaceMatches(t.regex, msg, t.replacement)
 }
 
