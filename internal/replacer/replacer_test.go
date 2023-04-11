@@ -40,7 +40,7 @@ https://www.reddit.com/r/truetf2/comments/test123`,
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := redditShortsReplacer.Replace(tt.have); got != tt.want {
+			if got := reddit.Replace(tt.have); got != tt.want {
 				t.Fatalf("%s != %s", got, tt.want)
 			}
 		})
@@ -64,7 +64,7 @@ func TestYoutubeShortsRegex(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := youtubeShortsReplacer.Replace(tt.have); got != tt.want {
+			if got := youtubeShorts.Replace(tt.have); got != tt.want {
 				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
 			}
 		})
@@ -105,7 +105,7 @@ https://www.amazon.com/dp/B006O6F932`,
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := amazonReplacer.Replace(tt.have); got != tt.want {
+			if got := amazon.Replace(tt.have); got != tt.want {
 				t.Fatalf("%s != %s", got, tt.want)
 			}
 		})
@@ -125,15 +125,27 @@ func TestDiscordRegex(t *testing.T) {
 			have: "https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif",
 			want: "https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif",
 		},
+		{
+			have: "https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png",
+			want: "https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png",
+		},
+		{
+			have: "https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg",
+			want: "https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg",
+		},
+		{
+			have: "https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg",
+			want: "https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg",
+		},
 		//https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
 		//https://cdn.discordapp.com/attachments/735399993485033472/1065376405921222686/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := discordReplacer.Replace(tt.have); got != tt.want {
+			if got := dc.Replace(tt.have); got != tt.want {
 				t.Fatalf("%s != %s", got, tt.want)
-			}
+			} 
 		})
 	}
 }
@@ -162,7 +174,7 @@ func TestTwitterRegex(t *testing.T) {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := twitterReplacer.Replace(tt.have); got != tt.want {
+			if got := twitter.Replace(tt.have); got != tt.want {
 				t.Fatalf("%s != %s", got, tt.want)
 			}
 		})

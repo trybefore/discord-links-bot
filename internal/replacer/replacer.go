@@ -13,29 +13,32 @@ import (
 )
 
 var replacers []Replacer = []Replacer{
-	amazonReplacer, twitterReplacer, discordReplacer, youtubeShortsReplacer, redditShortsReplacer,
+	amazon, twitter, dc, youtubeShorts, reddit,
 }
 
 var (
-	amazonReplacer = &genericReplacer{
+	amazon = &genericReplacer{
 		regex:       regexp.MustCompile(`https?:\/\/(.*)\.amazon\.(de|com|co\.uk).*\/dp\/(\w*)`),
 		replacement: "https://$1.amazon.$2/dp/$3",
 	}
-	twitterReplacer = &genericReplacer{
+	twitter = &genericReplacer{
 		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
 		replacement: "https://fxtwitter.com/$2/status/$4",
 	}
-	discordReplacer = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*[^\.gif]$)`),
-		replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
-	}
 
-	youtubeShortsReplacer = &genericReplacer{
+	dc = &discordReplacer{
+		regex: regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*\.gif$)`),
+		genericReplacer: &genericReplacer{
+			regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*$)`),
+			replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
+		}}
+
+	youtubeShorts = &genericReplacer{
 		regex:       regexp.MustCompile(`https?:\/\/(?:www.)?youtube.com\/shorts\/(\w.*)`),
 		replacement: "https://www.youtube.com/watch?v=$1",
 	}
 
-	redditShortsReplacer = &genericReplacer{
+	reddit = &genericReplacer{
 		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)?(?P<subreddit>[^/]+)/(?:(comments\/))?(?P<submission>\w{5,9})(?P<comment>/.*/\w{3,9}/)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
@@ -47,6 +50,22 @@ type Replacer interface {
 }
 
 var _ Replacer = (*genericReplacer)(nil)
+
+type discordReplacer struct {
+	*genericReplacer
+	regex *regexp.Regexp
+}
+
+func (t *discordReplacer) Replace(msg string) string {
+	if t.regex.MatchString(msg) {
+		return msg // link is a media.discordapp.com/.gif link, ignoring
+	}
+
+	if !t.genericReplacer.Matches(msg) {
+		return msg
+	}
+	return replaceMatches(t.genericReplacer.regex, msg, t.genericReplacer.replacement)
+}
 
 type genericReplacer struct {
 	regex       *regexp.Regexp
