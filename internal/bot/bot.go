@@ -76,7 +76,6 @@ func Run(ctx context.Context) error {
 		var files []sendpart.File
 
 		if viper.GetBool(config.NorwayMentioned) && strings.Contains(msg, "norway") {
-			log.Println("sending norway png")
 			file, err := resource.FS.ReadFile("resources/norway.png")
 			if err == nil {
 				files = append(files, sendpart.File{
@@ -89,8 +88,6 @@ func Run(ctx context.Context) error {
 		}
 
 		if viper.GetBool(config.Guh) && strings.Contains(msg, "guh") {
-			log.Println("sending guh gif")
-
 			file, err := resource.FS.ReadFile("resources/guh.gif")
 			if err == nil {
 				files = append(files, sendpart.File{
