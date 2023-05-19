@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"context"
 	"log"
 	"os"
@@ -12,9 +13,11 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"github.com/spf13/viper"
 	"github.com/trybefore/linksbot/internal/config"
 	"github.com/trybefore/linksbot/internal/replacer"
+	"github.com/trybefore/linksbot/resource"
 )
 
 var botState *state.State
@@ -51,7 +54,7 @@ func Run(ctx context.Context) error {
 	botState.AddHandler(func(c *gateway.MessageCreateEvent) {
 		me, err := botState.Me()
 		if err != nil {
-			log.Printf("error finding myself: %v", err)
+			log.Printf("error: finding myself: %v", err)
 			return
 		}
 
@@ -69,13 +72,34 @@ func Run(ctx context.Context) error {
 		}
 		msg := strings.ToLower(c.Message.Content)
 		msgContent := ""
+
+		var files []sendpart.File
+
 		if viper.GetBool(config.NorwayMentioned) && strings.Contains(msg, "norway") {
-			msgContent += "https://i.imgur.com/5msLOh4.png\n"
-		} else if viper.GetBool(config.Guh) && strings.Contains(msg, "guh") {
-			msgContent += "https://i.imgur.com/mJIDoiI.gif\n"
+			file, err := resource.FS.ReadFile("resources/norway.png")
+			if err == nil {
+				files = append(files, sendpart.File{
+					Name:   "norway.png",
+					Reader: bytes.NewReader(file),
+				})
+			} else {
+				log.Println("error: reading file:", err)
+			}
 		}
 
-		if msgContent != "" {
+		if viper.GetBool(config.Guh) && strings.Contains(msg, "guh") {
+			file, err := resource.FS.ReadFile("resources/guh.gif")
+			if err == nil {
+				files = append(files, sendpart.File{
+					Name:   "guh.gif",
+					Reader: bytes.NewReader(file),
+				})
+			} else {
+				log.Println("error: reading file:", err)
+			}
+		}
+
+		if msgContent != "" && len(files) == 0 {
 			if _, err := botState.SendMessageComplex(c.Message.ChannelID, api.SendMessageData{
 				Content:         msgContent,
 				AllowedMentions: &api.AllowedMentions{},
@@ -83,7 +107,18 @@ func Run(ctx context.Context) error {
 					MessageID: c.Message.ID,
 				},
 			}); err != nil {
-				log.Println("error sending reply message:", err)
+				log.Println("error: sending reply message:", err)
+			}
+		} else if len(files) > 0 {
+			if _, err := botState.SendMessageComplex(c.Message.ChannelID, api.SendMessageData{
+				AllowedMentions: &api.AllowedMentions{},
+				Reference: &discord.MessageReference{
+					MessageID: c.Message.ID,
+				},
+
+				Files: files,
+			}); err != nil {
+				log.Println("error: sending file replies:", err)
 			}
 		}
 
