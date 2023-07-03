@@ -1,0 +1,7 @@
+app = "discord-links-bot"
+primary_region = "ams"
+
+
+[[services]]
+auto_stop_machines = false
+auto_start_machines = false
