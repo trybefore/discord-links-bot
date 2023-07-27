@@ -23,7 +23,7 @@ var (
 	}
 	twitter = &genericReplacer{
 		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
-		replacement: "https://fxtwitter.com/$2/status/$4",
+		replacement: "https://vxtwitter.com/$2/status/$4",
 	}
 
 	dc = &discordReplacer{
