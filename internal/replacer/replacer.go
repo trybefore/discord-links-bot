@@ -22,7 +22,7 @@ var (
 		replacement: "https://$1.amazon.$2/dp/$3",
 	}
 	twitter = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter|x)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
 		replacement: "https://vxtwitter.com/$2/status/$4",
 	}
 
