@@ -39,7 +39,7 @@ var (
 	}
 
 	reddit = &genericReplacer{
-		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)?(?P<subreddit>[^/]+)/(?:(comments\/))?(?P<submission>\w{5,9})(?P<comment>/.*/\w{3,9}/)?`),
+		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(?:(comments/|s\/))?(?P<submission>\w{5,12})(?P<comment>/.*/\w{3,9}/)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
 )

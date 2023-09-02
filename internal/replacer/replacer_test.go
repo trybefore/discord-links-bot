@@ -36,6 +36,10 @@ func TestRedditRegex(t *testing.T) {
 https://www.reddit.com/r/truetf2/comments/asdf123
 https://www.reddit.com/r/truetf2/comments/test123`,
 		},
+		{
+			have: "https://reddit.com/r/pchelp/s/GPxofho2iY",
+			want: "https://www.reddit.com/r/pchelp/comments/GPxofho2iY",
+		},
 	}
 
 	for i, tt := range tests {
@@ -145,7 +149,7 @@ func TestDiscordRegex(t *testing.T) {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			if got := dc.Replace(tt.have); got != tt.want {
 				t.Fatalf("%s != %s", got, tt.want)
-			} 
+			}
 		})
 	}
 }
