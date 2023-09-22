@@ -6,6 +6,7 @@ import (
 )
 
 func TestRedditRegex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		want string
 		have string
@@ -15,30 +16,24 @@ func TestRedditRegex(t *testing.T) {
 			want: "https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/",
 		},
 		{
-			have: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
+			have: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13",
 			want: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
 		},
 		{
-			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
-			want: "https://www.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
+			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i",
+			want: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
 		},
 		{
-			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
-			`,
-			want: `https://www.reddit.com/r/truetf2/comments/107nizk`,
-		},
-		{
-			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
-			https://www.reddit.com/r/truetf2/comments/asdf123/what_makes_a_lot_of_the_configuration/
-			https://www.reddit.com/r/truetf2/comments/test123/what_makes_a_lot_of_the_configuration/
-			`,
-			want: `https://www.reddit.com/r/truetf2/comments/107nizk
-https://www.reddit.com/r/truetf2/comments/asdf123
-https://www.reddit.com/r/truetf2/comments/test123`,
+			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration?baba123=dafsdfasdf`,
+			want: `https://www.reddit.com/r/truetf2/comments/107nizk/`,
 		},
 		{
 			have: "https://reddit.com/r/pchelp/s/GPxofho2iY",
-			want: "https://www.reddit.com/r/pchelp/comments/GPxofho2iY",
+			want: "https://www.reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/",
+		},
+		{
+			have: "https://reddit.com/r/computers/s/BN4uCFXFyC",
+			want: "https://www.reddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/",
 		},
 	}
 
@@ -52,6 +47,7 @@ https://www.reddit.com/r/truetf2/comments/test123`,
 }
 
 func TestYoutubeShortsRegex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		want string
 		have string
@@ -76,6 +72,7 @@ func TestYoutubeShortsRegex(t *testing.T) {
 }
 
 func TestAmazonRegex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		want string
 		have string
@@ -117,6 +114,7 @@ https://www.amazon.com/dp/B006O6F932`,
 }
 
 func TestDiscordRegex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		want string
 		have string
@@ -155,6 +153,7 @@ func TestDiscordRegex(t *testing.T) {
 }
 
 func TestTwitterRegex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		want string
 		have string

@@ -1,8 +1,10 @@
 package replacer
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
+	"golang.org/x/sync/errgroup"
 )
 
 var replacers []Replacer = []Replacer{
@@ -38,8 +41,8 @@ var (
 		replacement: "https://www.youtube.com/watch?v=$1",
 	}
 
-	reddit = &genericReplacer{
-		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(?:(comments/|s\/))?(?P<submission>\w{5,12})(?P<comment>/.*/\w{3,9}/)?`),
+	reddit = &redditReplacer{
+		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(?:(comments/|s\/))?(?P<submission>\w{5,12})(?P<title>\/\w+\/)?(?P<comment>\w{3,9}(/)?)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
 )
@@ -50,6 +53,54 @@ type Replacer interface {
 }
 
 var _ Replacer = (*genericReplacer)(nil)
+var _ Replacer = (*discordReplacer)(nil)
+var _ Replacer = (*redditReplacer)(nil)
+
+type redditReplacer struct {
+	*genericReplacer
+	regex       *regexp.Regexp
+	replacement string
+}
+
+// Matches implements Replacer.
+func (r *redditReplacer) Matches(msg string) bool {
+	return r.regex.MatchString(msg)
+}
+
+var redditClient = &http.Client{
+	Timeout: time.Second * 5,
+}
+
+// Replace implements Replacer.
+func (r *redditReplacer) Replace(msg string) string {
+	if !r.Matches(msg) {
+		log.Printf("message doesn't match: %s", msg)
+		return msg
+	}
+
+	matches := r.regex.FindAllString(msg, -1)
+	if matches == nil {
+		log.Printf("FindAllString is empty for string '%s' using (%s)", msg, r.regex.String())
+		return "" // ?
+	}
+
+	links := make([]string, len(matches))
+
+	for i := 0; i < len(links); i++ {
+		link := matches[i]
+
+		links[i] = link
+	}
+
+	followedLinks, err := followLinks(links)
+
+	if err != nil {
+		log.Printf("followLinks: %v", err)
+		return msg
+	}
+
+	return strings.Join(followedLinks, "\n")
+}
 
 type discordReplacer struct {
 	*genericReplacer
@@ -156,4 +207,52 @@ func ReplaceMessage(s *state.State, m Message) {
 	}); err != nil {
 		log.Println("error sending reply message:", err)
 	}
+}
+
+func followLinks(links []string) (followedLinks []string, err error) {
+	followChan := make(chan string, 1)
+
+	grp, ctx := errgroup.WithContext(context.Background())
+	grp.SetLimit(2)
+	for _, link := range links {
+		linkToFollow := link
+		log.Printf("following link: %s", linkToFollow)
+		grp.Go(func() error {
+			req, err := http.NewRequest("GET", linkToFollow, nil)
+
+			if err != nil {
+				return err
+			}
+
+			req = req.WithContext(ctx)
+			res, err := redditClient.Do(req)
+			if err != nil {
+				return err
+			}
+			defer res.Body.Close()
+
+			followedURL := res.Request.URL
+			followedURL.RawQuery = ""
+
+			followedLink := followedURL.String()
+
+			log.Printf("followed link %s -> %s", linkToFollow, followedLink)
+
+			followChan <- followedLink
+
+			return nil
+		})
+	}
+
+	if err = grp.Wait(); err != nil {
+		return
+	}
+
+	close(followChan)
+
+	for followedLink := range followChan {
+		followedLinks = append(followedLinks, followedLink)
+	}
+
+	return followedLinks, nil
 }
