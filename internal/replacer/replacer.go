@@ -45,6 +45,11 @@ var (
 		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(?:(comments/|s\/))?(?P<submission>\w{5,12})(?P<title>\/\w+\/)?(?P<comment>\w{3,9}(/)?)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
+
+	instagram = &genericReplacer{
+		regex:       regexp.MustCompile(`http(s)://(\w{3}.)?instagram.com/reel/(?P<id>.*)/`),
+		replacement: "https://www.ddinstagram.com/reel/${id}",
+	}
 )
 
 type Replacer interface {

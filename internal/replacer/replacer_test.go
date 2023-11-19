@@ -71,6 +71,27 @@ func TestYoutubeShortsRegex(t *testing.T) {
 	}
 }
 
+func TestInstagramRegex(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		want string
+		have string
+	}{
+		{
+			have: "https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==",
+			want: "https://www.ddinstagram.com/reel/CztdYC8ryw7",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
+			if got := instagram.Replace(tt.have); got != tt.want {
+				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAmazonRegex(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
