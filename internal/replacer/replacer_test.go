@@ -81,6 +81,14 @@ func TestInstagramRegex(t *testing.T) {
 			have: "https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==",
 			want: "https://www.ddinstagram.com/reel/CztdYC8ryw7",
 		},
+		{
+			have: "https://www.instagram.com/reel/CzmhWrGNL9u/?utm_source=ig_web_copy_link",
+			want: "https://www.ddinstagram.com/reel/CzmhWrGNL9u",
+		},
+		{
+			have: "https://www.instagram.com/reels/CzmhWrGNL9u/",
+			want: "https://www.ddinstagram.com/reel/CzmhWrGNL9u",
+		},
 	}
 
 	for i, tt := range tests {

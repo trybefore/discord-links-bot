@@ -16,7 +16,7 @@ import (
 )
 
 var replacers []Replacer = []Replacer{
-	amazon, twitter, dc, youtubeShorts, reddit,
+	amazon, twitter, dc, youtubeShorts, reddit, instagram,
 }
 
 var (
@@ -47,7 +47,7 @@ var (
 	}
 
 	instagram = &genericReplacer{
-		regex:       regexp.MustCompile(`http(s)://(\w{3}.)?instagram.com/reel/(?P<id>.*)/`),
+		regex:       regexp.MustCompile(`http(s)://(\w{3}.)?instagram.com/reel(s)?/(?P<id>.*)/`),
 		replacement: "https://www.ddinstagram.com/reel/${id}",
 	}
 )
