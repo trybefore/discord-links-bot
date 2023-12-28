@@ -1,6 +1,7 @@
 package replacer
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 )
@@ -37,10 +38,14 @@ func TestRedditRegex(t *testing.T) {
 		},
 	}
 
+	replacer := ByName(Reddit)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := reddit.Replace(tt.have); got != tt.want {
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
 				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
@@ -62,10 +67,14 @@ func TestYoutubeShortsRegex(t *testing.T) {
 		},
 	}
 
+	replacer := ByName(YoutubeShorts)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := youtubeShorts.Replace(tt.have); got != tt.want {
-				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
+				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
@@ -91,10 +100,14 @@ func TestInstagramRegex(t *testing.T) {
 		},
 	}
 
+	replacer := ByName(Instagram)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := instagram.Replace(tt.have); got != tt.want {
-				t.Fatalf("[%s] %s != %s", tt.have, got, tt.want)
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
+				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
@@ -133,10 +146,14 @@ https://www.amazon.com/dp/B006O6F932`,
 		},
 	}
 
+	replacer := ByName(Amazon)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := amazon.Replace(tt.have); got != tt.want {
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
 				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
@@ -172,10 +189,14 @@ func TestDiscordRegex(t *testing.T) {
 		//https://cdn.discordapp.com/attachments/735399993485033472/1065376405921222686/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
 	}
 
+	replacer := ByName(Discord)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := dc.Replace(tt.have); got != tt.want {
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
 				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
@@ -204,10 +225,14 @@ func TestTwitterRegex(t *testing.T) {
 			want: "https://vxtwitter.com/blablabla/status/12345678910",
 		},
 	}
+	replacer := ByName(Twitter)
+
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			if got := twitter.Replace(tt.have); got != tt.want {
+			if got, err := replacer.Replace(tt.have); got != tt.want && err == nil {
 				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
 			}
 		})
 	}
