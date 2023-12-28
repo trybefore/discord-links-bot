@@ -5,11 +5,15 @@ A discord bot for replacing/trimming common links with more appropriate versions
 Message embeds are hidden when possible.
 
 ## Supported links
-- twitter links are replaced with fxtwitter links (bot hides original message's embed)
-- media.discordapp.net links are replaced with cdn.discordapp.com (bot does nothing to the original message, for now)
-- amazon product links are trimmed down to the bare minimum required to visit the product page (hides link embed)
-- reddit links are shortened to the bare minimum required to visit the submission (hides link embed)
-- instagram links are embedded using ddinstagram, removing any link trackers (only enabled for reels)
+
+- [Twitter](#twitter) links are replaced with fxtwitter links (bot hides original message's embed)
+- [media.discordapp.net](#discord) links are replaced with cdn.discordapp.com (bot does nothing to the original message,
+  for now)
+- [Amazon](#amazon) product links are trimmed down to the bare minimum required to visit the product page (hides link
+  embed)
+- [Reddit](#reddit) links are shortened to the bare minimum required to visit the submission (hides link embed)
+- [Instagram](#instagram) links are embedded using ddinstagram, removing any link trackers (only enabled for reels)
+- [TikTok](#tiktok) links are stripped of trackers and embedded
 
 ### Examples
 
@@ -18,6 +22,7 @@ Message embeds are hidden when possible.
 ```
 https://twitter.com/blablabla/status/12345678910?cheese=doodles
 ```
+
 Turns into
 
 ```
@@ -44,6 +49,7 @@ https://www.amazon.com/dp/B09B1HMJ9Z/ref=as_li_ss_tl?ie=UTF8&smid=ATVPDKIKX0DER&
 ```
 
 Turns into
+
 ```
 https://www.amazon.co.uk/dp/B09B1HMJ9Z
 https://www.amazon.com/dp/B09B1HMJ9Z
@@ -54,7 +60,9 @@ https://www.amazon.com/dp/B09B1HMJ9Z
 ```
 https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/?utm_medium=ios_app
 ```
+
 Turns into
+
 ```
 https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
 ```
@@ -64,7 +72,33 @@ https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_config
 ```
 https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==
 ```
+
 Turns into
+
 ```
 https://www.ddinstagram.com/reel/CztdYC8ryw7
+```
+
+#### TikTok
+
+```
+https://vm.tiktok.com/ZM6BdBuuY/
+```
+
+Turns into
+
+```
+https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
+```
+
+and
+
+```
+https://www.tiktok.com/@crowndefend/video/7311691285578943776
+```
+
+Turns into
+
+```
+https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
 ```
