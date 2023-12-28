@@ -26,6 +26,11 @@ func TestTikTokRegex(t *testing.T) {
 			want:     "https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471",
 			replacer: ttReplacer,
 		},
+		{
+			have:     "https://www.tiktok.com/@butt.erhand/video/7310948082781375745",
+			want:     "https://www.vxtiktok.com/@butt.erhand/video/7310948082781375745",
+			replacer: ttReplacer,
+		},
 	}
 
 	for i, tt := range tests {

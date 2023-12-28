@@ -95,7 +95,7 @@ func ReplaceAll(m Message) string {
 	for _, replacer := range *m.Replacers {
 		newMessage, err := replacer.Replace(outputMessage)
 
-		if !errors.Is(err, ErrNoMatch) {
+		if !errors.Is(err, ErrNoMatch) && err != nil {
 			log.Printf("error in replacer '%s': %v", replacer.Name(), err)
 			continue
 		}
