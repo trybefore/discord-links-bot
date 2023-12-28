@@ -52,27 +52,27 @@ func TestRedditRegex(t *testing.T) {
 	}{
 		{
 			have: "https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/#c867wpi",
-			want: "https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/",
+			want: "https://rxddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/",
 		},
 		{
 			have: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13",
-			want: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
+			want: "https://rxddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
 		},
 		{
 			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
-			want: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
+			want: "https://rxddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
 		},
 		{
 			have: `https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration?baba123=dafsdfasdf`,
-			want: `https://www.reddit.com/r/truetf2/comments/107nizk/`,
+			want: `https://rxddit.com/r/truetf2/comments/107nizk/`,
 		},
 		{
 			have: "https://reddit.com/r/pchelp/s/GPxofho2iY",
-			want: "https://www.reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/",
+			want: "https://rxddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/",
 		},
 		{
 			have: "https://reddit.com/r/computers/s/BN4uCFXFyC",
-			want: "https://www.reddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/",
+			want: "https://rxddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/",
 		},
 	}
 
