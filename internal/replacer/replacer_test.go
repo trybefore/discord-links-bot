@@ -6,6 +6,39 @@ import (
 	"testing"
 )
 
+func TestTikTokRegex(t *testing.T) {
+	t.Parallel()
+	ttReplacer := ByName(TikTok)
+	vmReplacer := ByName(TikTokVM)
+
+	tests := []struct {
+		want     string
+		have     string
+		replacer Replacer
+	}{
+		{
+			have:     "https://vm.tiktok.com/ZM6BdBuuY/",
+			want:     "https://www.vxtiktok.com/@crowndefend/video/7311691285578943776",
+			replacer: vmReplacer,
+		},
+		{
+			have:     "https://www.tiktok.com/@realcompmemer/video/7314546788617309471",
+			want:     "https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471",
+			replacer: ttReplacer,
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
+			if got, err := tt.replacer.Replace(tt.have); got != tt.want && err == nil {
+				t.Fatalf("%s != %s", got, tt.want)
+			} else if err != nil && !errors.Is(err, ErrNoMatch) {
+				t.Fatalf("error processing link '%s': %v", tt.have, err)
+			}
+		})
+	}
+}
+
 func TestRedditRegex(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

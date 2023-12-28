@@ -25,6 +25,8 @@ const (
 	Amazon        = "amazon"
 	Discord       = "discord"
 	Twitter       = "twitter"
+	TikTok        = "tiktok"
+	TikTokVM      = "tiktok_vm"
 )
 
 // ByName finds a replacer with the name, or nil
