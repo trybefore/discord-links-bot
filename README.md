@@ -10,8 +10,10 @@ Message embeds are hidden when possible.
 - amazon product links are trimmed down to the bare minimum required to visit the product page (hides link embed)
 - reddit links are shortened to the bare minimum required to visit the submission (hides link embed)
 - instagram links are embedded using ddinstagram, removing any link trackers (only enabled for reels)
+- tiktok links are stripped of trackers and embedded
 
 ### Examples
+
 
 #### Twitter
 
@@ -67,4 +69,22 @@ https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==
 Turns into
 ```
 https://www.ddinstagram.com/reel/CztdYC8ryw7
+```
+
+#### TikTok
+
+```
+https://vm.tiktok.com/ZM6BdBuuY/
+```
+Turns into
+```
+https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
+```
+and 
+```
+https://www.tiktok.com/@crowndefend/video/7311691285578943776
+```
+Turns into
+```
+https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
 ```
