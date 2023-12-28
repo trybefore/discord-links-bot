@@ -41,7 +41,7 @@ var (
 		replacement: "https://www.youtube.com/watch?v=$1",
 	}
 
-	reddit = &redditReplacer{
+	reddit = &linkFollower{
 		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
@@ -49,6 +49,10 @@ var (
 	instagram = &genericReplacer{
 		regex:       regexp.MustCompile(`http(s)://(\w{3}.)?instagram.com/reel(s)?/(?P<id>.*)/`),
 		replacement: "https://www.ddinstagram.com/reel/${id}",
+	}
+
+	tiktok = &linkFollower{
+		regex: regexp.MustCompile(`http(s)?://(())`),
 	}
 )
 
@@ -59,53 +63,7 @@ type Replacer interface {
 
 var _ Replacer = (*genericReplacer)(nil)
 var _ Replacer = (*discordReplacer)(nil)
-var _ Replacer = (*redditReplacer)(nil)
-
-type redditReplacer struct {
-	*genericReplacer
-	regex       *regexp.Regexp
-	replacement string
-}
-
-// Matches implements Replacer.
-func (r *redditReplacer) Matches(msg string) bool {
-	return r.regex.MatchString(msg)
-}
-
-var redditClient = &http.Client{
-	Timeout: time.Second * 5,
-}
-
-// Replace implements Replacer.
-func (r *redditReplacer) Replace(msg string) string {
-	if !r.Matches(msg) {
-		log.Printf("message doesn't match: %s", msg)
-		return msg
-	}
-
-	matches := r.regex.FindAllString(msg, -1)
-	if matches == nil {
-		log.Printf("FindAllString is empty for string '%s' using (%s)", msg, r.regex.String())
-		return "" // ?
-	}
-
-	links := make([]string, len(matches))
-
-	for i := 0; i < len(links); i++ {
-		link := matches[i]
-
-		links[i] = link
-	}
-
-	followedLinks, err := followLinks(links)
-
-	if err != nil {
-		log.Printf("followLinks: %v", err)
-		return msg
-	}
-
-	return strings.Join(followedLinks, "\n")
-}
+var _ Replacer = (*linkFollower)(nil)
 
 type discordReplacer struct {
 	*genericReplacer
@@ -139,6 +97,52 @@ func (t *genericReplacer) Matches(msg string) bool {
 	return t.regex.MatchString(msg)
 }
 
+type linkFollower struct {
+	*genericReplacer
+	regex       *regexp.Regexp
+	replacement string
+}
+
+// Matches implements Replacer.
+func (r *linkFollower) Matches(msg string) bool {
+	return r.regex.MatchString(msg)
+}
+
+var linkFollowerClient = &http.Client{
+	Timeout: time.Second * 5,
+}
+
+// Replace implements Replacer.
+func (r *linkFollower) Replace(msg string) string {
+	if !r.Matches(msg) {
+		log.Printf("message doesn't match: %s", msg)
+		return msg
+	}
+
+	matches := r.regex.FindAllString(msg, -1)
+	if matches == nil {
+		log.Printf("FindAllString is empty for string '%s' using (%s)", msg, r.regex.String())
+		return "" // ?
+	}
+
+	links := make([]string, len(matches))
+
+	for i := 0; i < len(links); i++ {
+		link := matches[i]
+
+		links[i] = link
+	}
+
+	followedLinks, err := followLinks(links)
+
+	if err != nil {
+		log.Printf("followLinks: %v", err)
+		return msg
+	}
+
+	return strings.Join(followedLinks, "\n")
+}
+
 func FindReplacers(m discord.Message) (out []Replacer) {
 	return findReplacers(m)
 }
@@ -153,6 +157,7 @@ func findReplacers(m discord.Message) (out []Replacer) {
 	return
 }
 
+// returns a new string with all regex matches replaced with replacement
 func replaceMatches(regex *regexp.Regexp, message, replacement string) string {
 	matches := regex.FindAllString(message, -1)
 	if matches == nil {
@@ -175,6 +180,7 @@ func replaceMatches(regex *regexp.Regexp, message, replacement string) string {
 	return strings.Join(links, "\n")
 }
 
+// ReplaceAll Goes through every replacer and replaces any matching strings, returning a new string with the matches replaced
 func ReplaceAll(m Message) string {
 	outputMessage := m.Content.Content
 
@@ -184,6 +190,8 @@ func ReplaceAll(m Message) string {
 
 	return outputMessage
 }
+
+// hide embeds in message m
 func hideEmbeds(s *state.State, m Message) {
 	time.AfterFunc(time.Second*2, func() {
 		oldFlags := m.Content.Flags
@@ -199,7 +207,9 @@ func hideEmbeds(s *state.State, m Message) {
 		}
 	})
 }
-func ReplaceMessage(s *state.State, m Message) {
+
+// SendReplacementMessage finds all matching strings and sends a new message in reply to Message m, with the matches replaced.
+func SendReplacementMessage(s *state.State, m Message) {
 	output := ReplaceAll(m)
 
 	hideEmbeds(s, m)
@@ -214,6 +224,7 @@ func ReplaceMessage(s *state.State, m Message) {
 	}
 }
 
+// followLinks Visits every link and returns the final (after redirect) destination for each one
 func followLinks(links []string) (followedLinks []string, err error) {
 	followChan := make(chan string, 1)
 
@@ -230,7 +241,7 @@ func followLinks(links []string) (followedLinks []string, err error) {
 			}
 
 			req = req.WithContext(ctx)
-			res, err := redditClient.Do(req)
+			res, err := linkFollowerClient.Do(req)
 			if err != nil {
 				return err
 			}

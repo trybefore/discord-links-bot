@@ -142,7 +142,7 @@ func Run(ctx context.Context) error {
 
 	go func(s *state.State) {
 		for msg := range messageQueue {
-			go replacer.ReplaceMessage(s, msg)
+			go replacer.SendReplacementMessage(s, msg)
 		}
 	}(botState)
 
