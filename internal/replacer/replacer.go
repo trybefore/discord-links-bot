@@ -21,28 +21,28 @@ var replacers []Replacer = []Replacer{
 
 var (
 	amazon = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/(.*)\.amazon\.(de|com|co\.uk).*\/dp\/(\w*)`),
+		regex:       regexp.MustCompile(`https?://(.*)\.amazon\.(de|com|co\.uk).*/dp/(\w*)`),
 		replacement: "https://$1.amazon.$2/dp/$3",
 	}
 	twitter = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/(?P<tld>twitter|x)\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)`),
+		regex:       regexp.MustCompile(`https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)`),
 		replacement: "https://vxtwitter.com/$2/status/$4",
 	}
 
 	dc = &discordReplacer{
-		regex: regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*\.gif$)`),
+		regex: regexp.MustCompile(`https?://media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*\.gif$)`),
 		genericReplacer: &genericReplacer{
-			regex:       regexp.MustCompile(`https?:\/\/media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*$)`),
+			regex:       regexp.MustCompile(`https?://media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*$)`),
 			replacement: "https://cdn.discordapp.com/attachments/$1/$2/$3",
 		}}
 
 	youtubeShorts = &genericReplacer{
-		regex:       regexp.MustCompile(`https?:\/\/(?:www.)?youtube.com\/shorts\/(\w.*)`),
+		regex:       regexp.MustCompile(`https?://(?:www.)?youtube.com/shorts/(\w.*)`),
 		replacement: "https://www.youtube.com/watch?v=$1",
 	}
 
 	reddit = &redditReplacer{
-		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(?:(comments/|s\/))?(?P<submission>\w{5,12})(?P<title>\/\w+\/)?(?P<comment>\w{3,9}(/)?)?`),
+		regex:       regexp.MustCompile(`http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?`),
 		replacement: "https://www.reddit.com/r/${subreddit}/comments/${submission}${comment}",
 	}
 

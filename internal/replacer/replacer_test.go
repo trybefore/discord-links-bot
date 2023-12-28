@@ -20,7 +20,7 @@ func TestRedditRegex(t *testing.T) {
 			want: "https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/",
 		},
 		{
-			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i",
+			have: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
 			want: "https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/",
 		},
 		{
@@ -189,19 +189,19 @@ func TestTwitterRegex(t *testing.T) {
 	}{
 		{
 			have: "https://twitter.com/blablabla/status/12345678910",
-			want: "https://fxtwitter.com/blablabla/status/12345678910",
+			want: "https://vxtwitter.com/blablabla/status/12345678910",
 		},
 		{
 			have: "https://twitter.com/blablabla/statuses/12345678910",
-			want: "https://fxtwitter.com/blablabla/status/12345678910",
+			want: "https://vxtwitter.com/blablabla/status/12345678910",
 		},
 		{
 			have: "https://twitter.com/blablabla/statuses/12345678910?cheese=doodles",
-			want: "https://fxtwitter.com/blablabla/status/12345678910",
+			want: "https://vxtwitter.com/blablabla/status/12345678910",
 		},
 		{
 			have: "http://twitter.com/blablabla/statuses/12345678910",
-			want: "https://fxtwitter.com/blablabla/status/12345678910",
+			want: "https://vxtwitter.com/blablabla/status/12345678910",
 		},
 	}
 	for i, tt := range tests {
