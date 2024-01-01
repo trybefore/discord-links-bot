@@ -1,0 +1,23 @@
+[package]
+name = "discord-links-bot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Daniel Boman"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+config = { version = "0.13.4" , features = ["yaml"]}
+env_logger = "0.10.1"
+lazy_static = "1.4.0"
+notify = "6.1.1"
+regex = "1.10.2"
+serde_derive = "1.0.193"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_regex = "1.1.0"
+serde_yaml = "0.9.29"
+anyhow = "1.0.77"
+thiserror = "1.0"
+clap = { version = "4.4.12", features = ["derive"] }
+log = "0.4.20"
+

@@ -1,0 +1,30 @@
+replacers:
+  - type: regex
+    name: &twitter twitter
+    match_regex: https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)
+    replacement: https://vxtwitter.com/$2/status/$4
+  - type: regex
+    name: &shorts youtube_shorts
+    match_regex: https?://(?:www.)?youtube.com/shorts/(\w.*)
+    replacement: https://www.youtube.com/watch?v=$1
+tests:
+  - replacer_name: *twitter
+    tests:
+      - have: https://twitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://twitter.com/blablabla/statuses/12345678910&cheese_doodles=123
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://vxtwitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://vxtwitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: http://twitter.com/blablabla/statuses/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://x.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: |-
+          http://twitter.com/blablabla/statuses/12345678910
+          http://twitter.com/blablabla/statuses/12345678910
+        want: |-
+          https://vxtwitter.com/blablabla/status/12345678910
+          https://vxtwitter.com/blablabla/status/12345678910
