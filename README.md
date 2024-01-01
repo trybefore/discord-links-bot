@@ -64,7 +64,7 @@ https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_config
 Turns into
 
 ```
-https://www.rxddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+https://rxddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
 ```
 
 #### Instagram
