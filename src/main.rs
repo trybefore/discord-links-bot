@@ -1,7 +1,7 @@
-use std::ops::Deref;
 use std::thread;
 use clap::{Parser, Subcommand};
-use log::{error, info};
+use env_logger::Env;
+use log::{error, info, Level, log_enabled};
 use crate::replacer::run_replacer_tests;
 
 mod replacer;
@@ -35,14 +35,15 @@ fn start() {
 }
 
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let args = Cli::parse();
 
     match args.command {
         Commands::Test { replacer_name } => {
-            match run_replacer_tests(replacer_name) {
+            match run_replacer_tests(replacer_name).await {
                 Ok(_) => {
                     info!("successfully ran tests")
                 }
@@ -53,5 +54,7 @@ fn main() {
         }
         Commands::Run { .. } => {}
     }
+
+    Ok(())
 }
 

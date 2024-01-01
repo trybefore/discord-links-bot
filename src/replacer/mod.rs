@@ -2,9 +2,8 @@ mod replacer_regex;
 mod replacer_links_follower;
 
 
-use std::fmt::Display;
 use anyhow::anyhow;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize};
 use serde_derive::Serialize;
 use crate::config::SETTINGS;
 use crate::replacer::replacer_links_follower::LinkFollowReplacer;
@@ -47,7 +46,8 @@ pub fn get_tests_by_name(replacer_name: String) -> anyhow::Result<Tests> {
     Ok(tests)
 }
 
-pub fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result<()> {
+/// run tests for replacer_name if provided, all replacers if `None`
+pub async fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result<()> {
     let mut replacer_tests: Tests = Tests(vec![]);
 
     if let Some(name) = replacer_name {
@@ -56,23 +56,25 @@ pub fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result<()> {
         replacer_tests = get_tests()?;
     }
 
-    run_tests(replacer_tests)?;
+    run_tests(replacer_tests).await?;
 
     Ok(())
 }
 
-fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
+async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
     for replacer in replacer_tests.0 {
         let name = &replacer.replacer_name;
         let tests = &replacer.tests;
 
-        if let Some(replacer) = get_replacer_by_name(&name)? {
+        if let Some(mut replacer) = get_replacer_by_name(&name)? {
+            let mut test_count = 0;
             for test in tests {
-                let got = replacer.replace(&test.have)?;
+                test_count += 1;
+                let got = replacer.replace(&test.have).await?;
                 let want = test.want.clone();
 
                 if !got.eq(&want) {
-                    return Err(anyhow!("{} != {}", got, want));
+                    return Err(anyhow!("{} #{}: {} != {}", &name, &test_count, got, want));
                 }
             }
         } else {
@@ -93,7 +95,7 @@ impl Tests {
 
         let tests = old_tests.into_iter().filter_map(|r| {
             if r.replacer_name.eq(&name) { Some(r) } else { None }
-        }).collect::<Vec::<ReplacerTests>>();
+        }).collect::<Vec<ReplacerTests>>();
 
         let result = Tests(tests);
 
@@ -144,10 +146,10 @@ impl StringReplacer for Replacer {
         }
     }
 
-    fn replace(&self, message: &String) -> anyhow::Result<String> {
+    async fn replace(&mut self, message: &String) -> anyhow::Result<String> {
         match self {
-            Replacer::Regex(r) => r.replace(message),
-            Replacer::LinkReplacer(r) => r.replace(message)
+            Replacer::Regex(r) => r.replace(message).await,
+            Replacer::LinkReplacer(r) => r.replace(message).await
         }
     }
 
@@ -166,7 +168,7 @@ pub trait StringReplacer {
     /// check if replacer has any matches for message
     fn matches(&self, message: &String) -> bool;
     /// replace occurrences in message, if applicable
-    fn replace(&self, message: &String) -> anyhow::Result<String>;
+    async fn replace(&mut self, message: &String) -> anyhow::Result<String>;
 
     /// name of the replacer
     fn name(&self) -> &String;
@@ -204,8 +206,9 @@ mod tests {
         assert_eq!(want_yaml, got_yaml.trim_end())
     }
 
-    #[test]
-    fn run_file_tests() {
-        assert!(run_replacer_tests(None).is_ok())
+    #[tokio::test]
+    async fn run_file_tests() {
+        let result = run_replacer_tests(None).await;
+        assert!(result.is_ok(), "failed to run tests: {:?}", result.err().unwrap())
     }
 }

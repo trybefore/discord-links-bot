@@ -7,7 +7,7 @@ authors = ["Daniel Boman"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-config = { version = "0.13.4" , features = ["yaml"]}
+config = { version = "0.13.4", features = ["yaml"] }
 env_logger = "0.10.1"
 lazy_static = "1.4.0"
 notify = "6.1.1"
@@ -20,4 +20,9 @@ anyhow = "1.0.77"
 thiserror = "1.0"
 clap = { version = "4.4.12", features = ["derive"] }
 log = "0.4.20"
+tokio = { version = "1.35.1", features = ["rt", "rt-multi-thread", "macros"] }
+serde_with = "3.4.0"
+futures = "0.3.30"
+reqwest = "0.11.23"
+
 

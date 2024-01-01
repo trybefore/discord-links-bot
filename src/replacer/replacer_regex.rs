@@ -1,6 +1,6 @@
 use regex::Regex;
 use crate::replacer;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -31,7 +31,7 @@ impl replacer::StringReplacer for RegexReplacer {
         self.match_regex.is_match(message.as_str())
     }
 
-    fn replace(&self, message: &String) -> anyhow::Result<String> {
+    async fn replace(&mut self, message: &String) -> anyhow::Result<String> {
         if !self.matches(message) {
             return Ok(message.to_string());
         }
