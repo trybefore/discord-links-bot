@@ -25,7 +25,43 @@ replacers:
         with: *reddit_replacement
       - replace: reddit.com/r/
         with: *reddit_replacement
+  - type: regex
+    name: &discord discord
+    match_regex: https?://media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*[^.gif].$)
+    replacement: https://cdn.discordapp.com/attachments/$1/$2/$3
+  - type: link-follower
+    name: &tiktok_vm tiktok_vm
+    match_regex: https://vm.tiktok.com/(?P<videoId>\w+)(?:/)?(?:\?.*)?
+    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
+  - type: link-follower
+    name: &tiktok tiktok
+    match_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
 tests:
+  - replacer_name: *tiktok_vm
+    tests:
+      - have: https://vm.tiktok.com/ZM6BdBuuY/
+        want: https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
+  - replacer_name: *tiktok
+    tests:
+      - have: https://www.tiktok.com/@realcompmemer/video/7314546788617309471
+        want: https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471
+      - have: https://www.tiktok.com/@butt.erhand/video/7310948082781375745
+        want: https://www.vxtiktok.com/@butt.erhand/video/7310948082781375745
+  - replacer_name: *discord
+    tests:
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif
+        want: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg
   - replacer_name: *twitter
     tests:
       - have: https://twitter.com/blablabla/status/12345678910

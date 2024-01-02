@@ -3,6 +3,7 @@ mod replacer_links_follower;
 
 
 use anyhow::anyhow;
+use log::{debug, info, trace};
 use serde::{Deserialize};
 use serde_derive::Serialize;
 use crate::config::SETTINGS;
@@ -62,7 +63,9 @@ pub async fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result
 }
 
 async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
+    debug!("running tests for {} replacers", replacer_tests.0.len());
     for replacer in replacer_tests.0 {
+        debug!()("running {} tests for replacer {}", replacer.replacer_name, replacer.tests.len());
         let name = &replacer.replacer_name;
         let tests = &replacer.tests;
 
@@ -76,6 +79,7 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
                 if !got.eq(&want) {
                     return Err(anyhow!("{} #{}: {} != {}", &name, &test_count, got, want));
                 }
+                debug!("have: {}, want: {}, got: {}", test.have, want, got);
             }
         } else {
             return Err(anyhow!("no replacer found by name {}", &name));
