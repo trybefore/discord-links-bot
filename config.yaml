@@ -20,11 +20,11 @@ replacers:
     match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
     post_replacement:
       - replace: www.reddit.com/r/
-        with: &rxddit rxddit.com/r/
+        with: &reddit_replacement rxddit.com/r/
       - replace: old.reddit.com/r/
-        with: *rxddit
+        with: *reddit_replacement
       - replace: reddit.com/r/
-        with: *rxddit
+        with: *reddit_replacement
 tests:
   - replacer_name: *twitter
     tests:
