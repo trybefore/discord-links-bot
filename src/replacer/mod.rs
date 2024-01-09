@@ -3,13 +3,31 @@ mod replacer_links_follower;
 
 
 use anyhow::anyhow;
-use log::{debug, info, trace};
+use log::{debug, trace};
 use serde::{Deserialize};
 use serde_derive::Serialize;
 use crate::config::SETTINGS;
 use crate::replacer::replacer_links_follower::LinkFollowReplacer;
 use crate::replacer::replacer_regex::RegexReplacer;
 
+
+fn get_matching_replacers(message: &String) -> anyhow::Result<Option<Vec<Replacer>>> {
+    debug!("checking message: {}", message);
+    let replacers: Vec<Replacer> = get_replacers()?.0.into_iter().filter(|r| return if !r.matches(message) {
+        debug!("replacer {} does not match the message", r.name());
+        false
+    } else { true }).collect();
+
+    if replacers.len() == 0 {
+        debug!("found no replacers by that message");
+        return Ok(None);
+    }
+
+    for x in &replacers {
+        debug!("found replacer: {}", x.name());
+    }
+    Ok(Some(replacers))
+}
 
 /// get all replacers in config.yaml
 fn get_replacers() -> anyhow::Result<Replacers> {
@@ -65,7 +83,7 @@ pub async fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result
 async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
     debug!("running tests for {} replacers", replacer_tests.0.len());
     for replacer in replacer_tests.0 {
-        debug!()("running {} tests for replacer {}", replacer.replacer_name, replacer.tests.len());
+        debug!("running {} tests for replacer {}", replacer.replacer_name, replacer.tests.len());
         let name = &replacer.replacer_name;
         let tests = &replacer.tests;
 
@@ -181,8 +199,11 @@ pub trait StringReplacer {
 
 #[cfg(test)]
 mod tests {
+    use config::ValueKind::String;
+    use log::{debug, info, log};
+    use log::LevelFilter::Debug;
     use crate::replacer::replacer_regex::RegexReplacer;
-    use crate::replacer::{Replacers, Replacer, run_replacer_tests};
+    use crate::replacer::{Replacers, Replacer, run_replacer_tests, get_matching_replacers, StringReplacer};
 
     #[test]
     fn serialize_test() {
@@ -203,7 +224,6 @@ mod tests {
   match_regex: https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)
   replacement: https://vxtwitter.com/$2/status/$4";
         let got_yaml = serde_yaml::to_string(&replacers).unwrap();
-        //println!("got: {}", &got_yaml);
 
         _ = serde_yaml::from_str::<Replacers>(want_yaml).unwrap();
 
@@ -214,5 +234,26 @@ mod tests {
     async fn run_file_tests() {
         let result = run_replacer_tests(None).await;
         assert!(result.is_ok(), "failed to run tests: {:?}", result.err().unwrap())
+    }
+
+    #[test]
+    fn test_get_matching_replacers() {
+        env_logger::builder().is_test(true).filter_level(Debug).init();
+        let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
+https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4 "#.to_string();
+        let matching_replacers = get_matching_replacers(&message).expect("could not read replacers from config");
+
+        assert!(matching_replacers.is_some());
+
+        let mut matching_replacers = matching_replacers.unwrap();
+
+        matching_replacers.sort_by_key(|r| r.name().clone());
+        let discord_name = matching_replacers.get(0).unwrap().name();
+        let tiktok_name = matching_replacers.get(1).unwrap().name();
+
+        debug!("discord_name = {} tiktok_name = {}", discord_name, tiktok_name);
+
+        assert!(matching_replacers.get(0).unwrap().name().eq("discord"));
+        assert!(matching_replacers.get(1).unwrap().name().eq("tiktok"))
     }
 }
