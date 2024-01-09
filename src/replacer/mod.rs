@@ -3,7 +3,7 @@ mod replacer_links_follower;
 
 
 use anyhow::anyhow;
-use log::{debug, trace};
+use log::{debug};
 use serde::{Deserialize};
 use serde_derive::Serialize;
 use crate::config::SETTINGS;
@@ -199,8 +199,7 @@ pub trait StringReplacer {
 
 #[cfg(test)]
 mod tests {
-    use config::ValueKind::String;
-    use log::{debug, info, log};
+    use log::{debug};
     use log::LevelFilter::Debug;
     use crate::replacer::replacer_regex::RegexReplacer;
     use crate::replacer::{Replacers, Replacer, run_replacer_tests, get_matching_replacers, StringReplacer};

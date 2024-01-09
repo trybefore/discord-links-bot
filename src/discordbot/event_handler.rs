@@ -9,7 +9,7 @@ pub(crate) struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, _ctx: Context, msg: Message) {
+    async fn message(&self, _ctx: Context, _msg: Message) {
         // info!("[{}] [{}] {}: {}", msg.guild_id.unwrap(), msg.channel_id, msg.author.name, msg.content);
         
         

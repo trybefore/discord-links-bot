@@ -2,7 +2,7 @@ use std::sync::mpsc::channel;
 use clap::{Parser, Subcommand};
 use futures::StreamExt;
 
-use log::{debug, error, info, trace};
+use log::{debug, error, info};
 use crate::discordbot::create_client;
 use crate::replacer::run_replacer_tests;
 
