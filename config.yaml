@@ -31,7 +31,7 @@ replacers:
     replacement: https://cdn.discordapp.com/attachments/$1/$2/$3
   - type: link-follower
     name: &tiktok_vm tiktok_vm
-    match_regex: https://vm.tiktok.com/(?P<videoId>\w+)(?:/)?(?:\?.*)?
+    match_regex: https://vm\.tiktok\.com/(?P<videoId>\w+)(?:/)?(?:\?.*)?
     destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
     destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
   - type: link-follower
