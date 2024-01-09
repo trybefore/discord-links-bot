@@ -17,9 +17,11 @@ lazy_static! {
         }
     );
 
-    pub static ref CONFIG_PATH: &'static str = {
-        let path = option_env!("BOT_CONFIG_FILE").unwrap_or("./config.yaml");
-        path
+    pub static ref CONFIG_PATH: String = {
+        match std::env::var("BOT_CONFIG_FILE") {
+            Ok(result) => {result},
+            Err(_) => {"./config.yaml".to_string()}
+        }
     };
 }
 
