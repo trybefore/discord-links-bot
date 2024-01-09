@@ -1,16 +1,16 @@
-use std::collections::{BTreeMap, HashMap};
-use std::ptr::replace;
-use std::time::Duration;
+
+
+
 use anyhow::anyhow;
-use futures::future::try_join_all;
-use futures::{stream, StreamExt};
-use log::{debug, error, info};
+
+use futures::{StreamExt};
+use log::{debug, error};
 use regex::Regex;
-use reqwest::{Error, Response, StatusCode};
+use reqwest::{StatusCode};
 use serde_derive::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-use tokio::task::JoinHandle;
-use tokio::time::sleep;
+
+
 use crate::replacer::StringReplacer;
 
 /// Follows links, and then runs an optional replacement at the end
@@ -90,7 +90,7 @@ impl StringReplacer for LinkFollowReplacer {
         let results = futures::stream::iter(
             links.into_iter().map(|link| {
                 async move {
-                    let mut response = client.get(&link)
+                    let response = client.get(&link)
                         .send()
                         .await?;
                     if response.status() != StatusCode::OK {
