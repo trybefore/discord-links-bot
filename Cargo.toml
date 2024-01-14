@@ -23,7 +23,7 @@ log = "0.4.20"
 tokio = { version = "1.35.1", features = ["rt", "rt-multi-thread", "macros"] }
 serde_with = "3.4.0"
 futures = "0.3.30"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.23", features = ["rustls-tls"] }
 serenity = { version = "0.12.0", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "collector"] }
 ctrlc = "3.4.2"
 futures-core = "0.3.30"
