@@ -14,7 +14,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --bin discord-links-bot
 
-FROM debian:bookworm-slim AS runtime
+FROM buildpack-deps:bookworm AS runtime
 WORKDIR /app
 COPY --from=builder /app/target/release/discord-links-bot /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/discord-links-bot"]
