@@ -1,0 +1,122 @@
+replacers:
+  - type: regex
+    name: &twitter twitter
+    match_regex: https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)
+    replacement: https://vxtwitter.com/$2/status/$4
+  - type: regex
+    name: &shorts youtube_shorts
+    match_regex: https?://(?:www.)?youtube.com/shorts/(\w.*)
+    replacement: https://www.youtube.com/watch?v=$1
+  - type: regex
+    name: &amazon amazon
+    match_regex: https?://(.*)\.amazon\.(de|com|co\.uk).*/dp/(\w*)
+    replacement: https://$1.amazon.$2/dp/$3
+  - type: regex
+    name: &instagram instagram
+    match_regex: http(s)://(\w{3}.)?instagram.com/reel(s)?/(?P<id>.*)/
+    replacement: https://www.ddinstagram.com/reel/${id}
+  - type: link-follower
+    name: &reddit reddit
+    match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
+    post_replacement:
+      - replace: www.reddit.com/r/
+        with: &reddit_replacement rxddit.com/r/
+      - replace: old.reddit.com/r/
+        with: *reddit_replacement
+      - replace: reddit.com/r/
+        with: *reddit_replacement
+  - type: regex
+    name: &discord discord
+    match_regex: https?://media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*[^.gif].$)
+    replacement: https://cdn.discordapp.com/attachments/$1/$2/$3
+  - type: link-follower
+    name: &tiktok_vm tiktok_vm
+    match_regex: https://vm\.tiktok\.com/(?P<videoId>\w+)(?:/)?(?:\?.*)?
+    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
+  - type: link-follower
+    name: &tiktok tiktok
+    match_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
+tests:
+  - replacer_name: *tiktok_vm
+    tests:
+      - have: https://vm.tiktok.com/ZM6BdBuuY/
+        want: https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
+  - replacer_name: *tiktok
+    tests:
+      - have: https://www.tiktok.com/@realcompmemer/video/7314546788617309471
+        want: https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471
+      - have: https://www.tiktok.com/@butt.erhand/video/7310948082781375745
+        want: https://www.vxtiktok.com/@butt.erhand/video/7310948082781375745
+  - replacer_name: *discord
+    tests:
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif
+        want: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.gif
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.png
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpeg
+      - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg
+        want: https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.jpg
+  - replacer_name: *twitter
+    tests:
+      - have: https://twitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://twitter.com/blablabla/statuses/12345678910&cheese_doodles=123
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://vxtwitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://vxtwitter.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: http://twitter.com/blablabla/statuses/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: https://x.com/blablabla/status/12345678910
+        want: https://vxtwitter.com/blablabla/status/12345678910
+      - have: |-
+          http://twitter.com/blablabla/statuses/12345678910
+          http://twitter.com/blablabla/statuses/12345678910
+        want: |-
+          https://vxtwitter.com/blablabla/status/12345678910
+          https://vxtwitter.com/blablabla/status/12345678910
+  - replacer_name: *shorts
+    tests:
+      - have: https://www.youtube.com/shorts/u3juys4lq-E
+        want: https://www.youtube.com/watch?v=u3juys4lq-E
+      - have: https://youtube.com/shorts/u3juys4lq-E
+        want: https://www.youtube.com/watch?v=u3juys4lq-E
+  - replacer_name: *amazon
+    tests:
+      - have: https://www.amazon.com/dp/B09B1HMJ9Z/ref=as_li_ss_tl?ie=UTF8&smid=ATVPDKIKX0DER&th=1&linkCode=sl1&tag=sec2002-20
+        want: https://www.amazon.com/dp/B09B1HMJ9Z
+      - have: https://www.amazon.co.uk/dp/B09B1HMJ9Z/ref=as_li_ss_tl?ie=UTF8&smid=ATVPDKIKX0DER&th=1&linkCode=sl1&tag=sec2002-20
+        want: https://www.amazon.co.uk/dp/B09B1HMJ9Z
+      - have: https://www.amazon.de/dp/B09B1HMJ9Z/ref=as_li_ss_tl?ie=UTF8&smid=ATVPDKIKX0DER&th=1&linkCode=sl1&tag=sec2002-20
+        want: https://www.amazon.de/dp/B09B1HMJ9Z
+      - have: https://www.amazon.com/Monster-High-School-Playset/dp/B006O6F932/ref=gbph_tit_e-7_fb02_85d3d028?smid=A3CXJV2JYTL237&pf_rd_p=8e268714-ad3d-444b-b0df-d51d8825fb02&pf_rd_s=events-center-c-7&pf_rd_t=701&pf_rd_i=HTL_desktop&pf_rd_m=ATVPDKIKX0DER&pf_rd_r=8MKN8SY6C5ZP4NC1C0RB
+        want: https://www.amazon.com/dp/B006O6F932
+  - replacer_name: *instagram
+    tests:
+      - have: https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==
+        want: https://www.ddinstagram.com/reel/CztdYC8ryw7
+      - have: https://www.instagram.com/reel/CzmhWrGNL9u/?utm_source=ig_web_copy_link
+        want: https://www.ddinstagram.com/reel/CzmhWrGNL9u
+      - have: https://www.instagram.com/reels/CzmhWrGNL9u/
+        want: https://www.ddinstagram.com/reel/CzmhWrGNL9u
+  - replacer_name: *reddit
+    tests:
+      - have: https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/#c867wpi
+        want: https://rxddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/
+      - have: https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13
+        want: https://rxddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/
+      - have: https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i
+        want: https://rxddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i/
+      - have: https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration?baba123=dafsdfasdf
+        want: https://rxddit.com/r/truetf2/comments/107nizk/
+      - have: https://reddit.com/r/pchelp/s/GPxofho2iY/
+        want: https://rxddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+      - have: https://reddit.com/r/computers/s/BN4uCFXFyC
+        want: https://rxddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/

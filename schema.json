@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JSON Schema for discord-links-bot's config.yaml",
+  "type": "object",
+  "properties": {
+    "replacers": {
+      "type": "array",
+      "items": {
+        "title": "Replacer",
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "type of replacer",
+            "type": "string",
+            "enum": [
+              "regex",
+              "link-follower"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "name of the replacer"
+          },
+          "match_regex": {
+            "type": "string",
+            "description": "regex to match for a replacer to process a message"
+          },
+          "replacement": {
+            "description": "regex replacement format",
+            "type": "string"
+          },
+          "destination_regex": {
+            "description": "regex for replacing a followed link in a link-follower replacer",
+            "type": "string"
+          },
+          "destination_replacement": {
+            "description": "regex replacement format",
+            "type": "string"
+          },
+          "post_replacement": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "replace": {
+                  "type": "string"
+                },
+                "with": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "match_regex"
+        ],
+        "oneOf": [
+          {
+            "properties": {
+              "type": {
+                "const": "regex"
+              }
+            },
+            "required": [
+              "replacement"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "link-follower"
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "destination_regex",
+                  "destination_replacement"
+                ],
+                "not": {
+                  "required": [
+                    "post_replacement"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "post_replacement"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "destination_regex"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "destination_replacement"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "title": "Replacer Test",
+        "properties": {
+          "replacer_name": {
+            "type": "string"
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "have": {
+                  "type": "string",
+                  "description": "the url we have"
+                },
+                "want": {
+                  "type": "string",
+                  "description": "the url we want in return"
+                }
+              },
+              "required": [
+                "have",
+                "want"
+              ]
+            }
+          }
+        },
+        "required": [
+          "replacer_name",
+          "tests"
+        ]
+      }
+    }
+  }
+}
