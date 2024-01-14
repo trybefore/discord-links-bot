@@ -2,31 +2,51 @@ mod replacer_regex;
 mod replacer_links_follower;
 
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use log::{debug};
 use serde::{Deserialize};
 use serde_derive::Serialize;
+use thiserror::Error;
 use crate::config::SETTINGS;
 use crate::replacer::replacer_links_follower::LinkFollowReplacer;
 use crate::replacer::replacer_regex::RegexReplacer;
 
 
-fn get_matching_replacers(message: &String) -> anyhow::Result<Option<Vec<Replacer>>> {
+
+pub async fn replace_message(message: &String) -> anyhow::Result<String> {
+    let replacers = get_matching_replacers(message)?;
+
+    let mut links: Vec<String> = Vec::new();
+
+    for mut r in replacers {
+        debug!("replacing {} with replacer {}", message, r.name());
+        links.push(r.replace(&message).await?);
+    }
+
+    Ok(links.join("\n"))
+}
+
+
+
+pub fn get_matching_replacers(message: &String) -> anyhow::Result<Vec<Replacer>> {
     debug!("checking message: {}", message);
-    let replacers: Vec<Replacer> = get_replacers()?.0.into_iter().filter(|r| return if !r.matches(message) {
+    let mut replacers: Vec<Replacer> = get_replacers()?.0.into_iter().filter(|r| return if !r.matches(message) {
         debug!("replacer {} does not match the message", r.name());
         false
     } else { true }).collect();
 
     if replacers.len() == 0 {
         debug!("found no replacers by that message");
-        return Ok(None);
+        bail!(ReplacerError::NoReplacerFound)
     }
 
     for x in &replacers {
         debug!("found replacer: {}", x.name());
     }
-    Ok(Some(replacers))
+
+
+    replacers.sort_by_key(|r| r.name().clone()); // sort alphabetically, for consistent test results
+    Ok(replacers)
 }
 
 /// get all replacers in config.yaml
@@ -67,7 +87,7 @@ pub fn get_tests_by_name(replacer_name: String) -> anyhow::Result<Tests> {
 
 /// run tests for replacer_name if provided, all replacers if `None`
 pub async fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result<()> {
-    let mut replacer_tests: Tests = Tests(vec![]);
+    let mut replacer_tests: Tests;
 
     if let Some(name) = replacer_name {
         replacer_tests = get_tests_by_name(name)?;
@@ -107,6 +127,12 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
     Ok(())
 }
 
+
+#[derive(Error, Debug)]
+pub enum ReplacerError {
+    #[error("Could not find any matching replacers")]
+    NoReplacerFound
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Tests(pub(crate) Vec<ReplacerTests>);
@@ -199,10 +225,10 @@ pub trait StringReplacer {
 
 #[cfg(test)]
 mod tests {
-    use log::{debug};
+    use log::{debug, info};
     use log::LevelFilter::Debug;
     use crate::replacer::replacer_regex::RegexReplacer;
-    use crate::replacer::{Replacers, Replacer, run_replacer_tests, get_matching_replacers, StringReplacer};
+    use crate::replacer::{Replacers, Replacer, run_replacer_tests, get_matching_replacers, StringReplacer, replace_message};
 
     #[test]
     fn serialize_test() {
@@ -235,6 +261,21 @@ mod tests {
         assert!(result.is_ok(), "failed to run tests: {:?}", result.err().unwrap())
     }
 
+    #[tokio::test]
+    async fn test_replace_message() {
+        env_logger::builder().is_test(true).filter_level(Debug).init();
+        let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
+https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4"#.to_string();
+
+        let new_message = replace_message(&message).await.unwrap();
+
+        let want = r"https://cdn.discordapp.com/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
+https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471";
+        info!("got new message: {}", new_message);
+
+        assert_eq!(new_message, want);
+    }
+
     #[test]
     fn test_get_matching_replacers() {
         env_logger::builder().is_test(true).filter_level(Debug).init();
@@ -242,11 +283,8 @@ mod tests {
 https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4 "#.to_string();
         let matching_replacers = get_matching_replacers(&message).expect("could not read replacers from config");
 
-        assert!(matching_replacers.is_some());
+        assert!(matching_replacers.len() > 0);
 
-        let mut matching_replacers = matching_replacers.unwrap();
-
-        matching_replacers.sort_by_key(|r| r.name().clone());
         let discord_name = matching_replacers.get(0).unwrap().name();
         let tiktok_name = matching_replacers.get(1).unwrap().name();
 
@@ -255,4 +293,6 @@ https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/
         assert!(matching_replacers.get(0).unwrap().name().eq("discord"));
         assert!(matching_replacers.get(1).unwrap().name().eq("tiktok"))
     }
+
+
 }

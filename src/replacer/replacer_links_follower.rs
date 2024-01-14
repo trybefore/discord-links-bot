@@ -39,7 +39,7 @@ pub struct LinkFollowReplacer {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Replacements {
+pub struct Replacements {
     replace: String,
     with: String,
 }

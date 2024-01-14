@@ -1,6 +1,6 @@
 use std::sync::mpsc::channel;
 use clap::{Parser, Subcommand};
-use futures::StreamExt;
+
 
 use log::{debug, error, info};
 use crate::discordbot::create_client;
@@ -79,8 +79,11 @@ async fn start() {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "discord_links_bot=info")
+    }
     env_logger::init();
-    
+
 
     let args = Cli::parse();
 

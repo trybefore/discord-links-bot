@@ -1,35 +1,20 @@
-#build binary
-
-FROM golang:1.21-alpine AS builder
-
-RUN apk --update upgrade && apk add --no-cache git make build-base && rm -rf /var/cache/apk/*
-
-ENV GO111MODULE=on
-
-RUN mkdir /app
+FROM lukemathwalker/cargo-chef:latest-rust-1.75.0 AS chef
 WORKDIR /app
-COPY go.mod .
-COPY go.sum .
 
-RUN go mod download
-
+FROM chef AS planner
 COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-ARG buildOptions
+FROM chef AS builder 
+COPY --from=planner /app/recipe.json recipe.json
+# Build dependencies
+RUN cargo chef cook --release --recipe-path recipe.json
 
-RUN env ${buildOptions} go build -ldflags="-w -s -X github.com/trybefore/linksbot/internal/config.Commit=$(git rev-parse --short HEAD)" -o /go/bin/linksbot .
+# Build application
+COPY . .
+RUN cargo build --release --bin discord-links-bot
 
-#optimized build
-
-FROM alpine
-RUN apk add --no-cache tzdata
-RUN apk add --no-cache curl
-ENV TZ=Europe/Stockholm
-COPY --from=builder /go/bin/linksbot /go/bin/linksbot
-
-RUN apk --update upgrade && apk add --no-cache ca-certificates && update-ca-certificates 2>/dev/null || true && rm -rf /var/cache/apk/*
-
-EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 CMD curl --fail http://localhost:8080/health_check || exit 1
-
-ENTRYPOINT ["/go/bin/linksbot", "run"]
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+COPY --from=builder /app/target/release/discord-links-bot /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/discord-links-bot"]
