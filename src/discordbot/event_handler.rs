@@ -105,8 +105,9 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, data: Ready) {
         info!("now live in {} guilds",data.guilds.len());
 
+        let version = option_env!("GIT_HASH").unwrap_or("dunno");
 
-        let activity = ActivityData::competing(format!("{}", std::env::var("GIT_HASH").unwrap_or("dunno".to_string())));
+        let activity = ActivityData::competing(format!("{}", version));
         let status = OnlineStatus::DoNotDisturb;
 
         ctx.set_presence(Some(activity), status)
