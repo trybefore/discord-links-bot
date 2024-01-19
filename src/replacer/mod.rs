@@ -2,11 +2,13 @@ mod replacer_regex;
 mod replacer_link_follower;
 
 
+use std::time::Duration;
 use anyhow::{anyhow, bail};
 use log::{debug};
 use serde::{Deserialize};
 use serde_derive::Serialize;
 use thiserror::Error;
+use tokio::time::sleep;
 use crate::config::SETTINGS;
 use crate::replacer::replacer_link_follower::LinkFollowReplacer;
 use crate::replacer::replacer_regex::RegexReplacer;
@@ -123,7 +125,8 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
                 if !got.eq(&want) {
                     return Err(anyhow!("{} #{}: {} != {}", &name, &test_count, got, want));
                 }
-                debug!("have: {}, want: {}, got: {}", test.have, want, got);
+                //debug!("have: {}, want: {}, got: {}", test.have, want, got);
+                sleep(Duration::from_millis(500)).await; // sleep to avoid TooManyRequests for link followers
             }
         } else {
             return Err(anyhow!("no replacer found by name {}", &name));
@@ -269,7 +272,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_replace_message() {
-        env_logger::builder().is_test(true).filter_level(Debug).init();
+        _ = env_logger::builder().is_test(true).filter_level(Debug).try_init();
         let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
 https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4"#.to_string();
 

@@ -12,19 +12,19 @@ pub struct RegexReplacer {
 }
 
 
-impl RegexReplacer {
-    pub fn new(name: String, regex: String, replacement: String) -> Result<Self, regex::Error> {
-        let rgx = Regex::new(regex.clone().as_str())?;
-
-        Ok(
-            Self {
-                match_regex: rgx,
-                replacement,
-                name,
-            }
-        )
-    }
-}
+// impl RegexReplacer {
+//     pub fn new(name: String, regex: String, replacement: String) -> Result<Self, regex::Error> {
+//         let rgx = Regex::new(regex.clone().as_str())?;
+// 
+//         Ok(
+//             Self {
+//                 match_regex: rgx,
+//                 replacement,
+//                 name,
+//             }
+//         )
+//     }
+// }
 
 impl replacer::StringReplacer for RegexReplacer {
     fn matches(&self, message: &String) -> bool {
