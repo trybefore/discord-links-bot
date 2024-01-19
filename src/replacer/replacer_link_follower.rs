@@ -1,6 +1,3 @@
-
-
-
 use anyhow::anyhow;
 
 use futures::{StreamExt};
@@ -44,11 +41,20 @@ pub struct Replacements {
     with: String,
 }
 
+#[cfg(not(test))]
 pub fn create_client() -> anyhow::Result<reqwest::Client> {
     let client = reqwest::ClientBuilder::default().user_agent("curl/4.0").build()?;
 
     Ok(client)
 }
+
+#[cfg(test)]
+pub fn create_client() -> anyhow::Result<reqwest::Client> {
+    let client = reqwest::ClientBuilder::default().user_agent("curl/4.0").build()?;
+
+    Ok(client)
+}
+
 
 impl LinkFollowReplacer {
     pub fn new(

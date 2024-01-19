@@ -1,5 +1,5 @@
 mod replacer_regex;
-mod replacer_links_follower;
+mod replacer_link_follower;
 
 
 use anyhow::{anyhow, bail};
@@ -8,9 +8,8 @@ use serde::{Deserialize};
 use serde_derive::Serialize;
 use thiserror::Error;
 use crate::config::SETTINGS;
-use crate::replacer::replacer_links_follower::LinkFollowReplacer;
+use crate::replacer::replacer_link_follower::LinkFollowReplacer;
 use crate::replacer::replacer_regex::RegexReplacer;
-
 
 
 pub async fn replace_message(message: &String) -> anyhow::Result<String> {
@@ -20,20 +19,27 @@ pub async fn replace_message(message: &String) -> anyhow::Result<String> {
 
     for mut r in replacers {
         debug!("replacing {} with replacer {}", message, r.name());
-        links.push(r.replace(&message).await?);
+        let mut replaced_link = r.replace(&message).await?;
+        if message.contains("||") {
+            replaced_link = format!("||{}||", replaced_link);
+        }
+        links.push(replaced_link);
     }
 
     Ok(links.join("\n"))
 }
 
 
-
 pub fn get_matching_replacers(message: &String) -> anyhow::Result<Vec<Replacer>> {
     debug!("checking message: {}", message);
-    let mut replacers: Vec<Replacer> = get_replacers()?.0.into_iter().filter(|r| return if !r.matches(message) {
+    let mut replacers: Vec<Replacer> = get_replacers()?.0.into_iter().filter(|r| r.matches(message)).collect();
+
+    /*
+    return if !r.matches(message) {
         debug!("replacer {} does not match the message", r.name());
         false
-    } else { true }).collect();
+    } else { true }
+     */
 
     if replacers.len() == 0 {
         debug!("found no replacers by that message");
@@ -87,7 +93,7 @@ pub fn get_tests_by_name(replacer_name: String) -> anyhow::Result<Tests> {
 
 /// run tests for replacer_name if provided, all replacers if `None`
 pub async fn run_replacer_tests(replacer_name: Option<String>) -> anyhow::Result<()> {
-    let mut replacer_tests: Tests;
+    let replacer_tests: Tests;
 
     if let Some(name) = replacer_name {
         replacer_tests = get_tests_by_name(name)?;
@@ -293,6 +299,4 @@ https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/
         assert!(matching_replacers.get(0).unwrap().name().eq("discord"));
         assert!(matching_replacers.get(1).unwrap().name().eq("tiktok"))
     }
-
-
 }
