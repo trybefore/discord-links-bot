@@ -46,7 +46,7 @@ pub struct Replacements {
 lazy_static! {
     static ref CLIENT: Arc<reqwest::Client> = Arc::new(
         reqwest::Client::builder()
-        .timeout(Duration::from_secs(5))
+        .timeout(Duration::from_secs(10))
         .user_agent("curl/4.0")
         .build()
         .unwrap()
