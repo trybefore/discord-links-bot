@@ -119,7 +119,7 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
             let mut test_count = 0;
             for test in tests {
                 test_count += 1;
-                let got = replacer.replace(&test.have).await?;
+                let got = replacer.replace(&test.have).await.unwrap_or_else(|_| "".to_string());
                 let want = test.want.clone();
 
                 if !got.eq(&want) {

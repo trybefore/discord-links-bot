@@ -18,6 +18,7 @@ pub(crate) struct Handler;
 
 pub async fn replace_discord_message(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     debug!("[{}] [{}] {}: {}", msg.guild_id.unwrap(), msg.channel_id, msg.author.name, &msg.content);
+    let start_time = Instant::now();
 
     let new_message = match crate::replacer::replace_message(&msg.content).await {
         Ok(msg) => msg,
@@ -32,14 +33,18 @@ pub async fn replace_discord_message(ctx: &Context, msg: &Message) -> anyhow::Re
         }
     };
 
+    if new_message.is_empty() {
+        debug!("empty response message (should be okay if the link matched a bad_url_regex)");
+        return Ok(());
+    }
+
     let response = CreateMessage::new().content(&new_message).reference_message(msg).allowed_mentions(CreateAllowedMentions::new().replied_user(false));
     debug!("replaced [{}] -> [{}]", &msg.content, &new_message);
 
 
-    let start_time = Instant::now();
     match msg.channel_id.send_message(&ctx.http, response).await {
         Ok(_) => {
-            debug!("took {}ms to send message", start_time.elapsed().as_millis());
+            debug!("took {}ms to visit the links and send the message", start_time.elapsed().as_millis());
 
             hide_embeds(&ctx, &mut msg.clone()).await?;
 

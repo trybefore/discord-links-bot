@@ -49,6 +49,10 @@
                 }
               }
             }
+          },
+          "bad_url_match": {
+            "description": "a final destination link matching this regex will be ignored in the message",
+            "type": "string"
           }
         },
         "required": [

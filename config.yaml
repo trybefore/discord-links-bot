@@ -18,6 +18,7 @@ replacers:
   - type: link-follower
     name: &reddit reddit
     match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
+    bad_url_match: http(s)?://((old|www)\.)?reddit\.com/over18.*
     post_replacement:
       - replace: www.reddit.com/r/
         with: &reddit_replacement rxddit.com/r/
@@ -120,3 +121,5 @@ tests:
         want: https://rxddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
       - have: https://reddit.com/r/computers/s/BN4uCFXFyC
         want: https://rxddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/
+      - have: https://old.reddit.com/r/nsfw # should resolve to something like https://old.reddit.com/over18?dest=https%3A%2F%2Fold.reddit.com%2Fr%2Fnsfw%2F
+        want: https://old.reddit.com/r/nsfw

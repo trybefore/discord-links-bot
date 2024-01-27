@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 
 use futures::{StreamExt};
 use lazy_static::lazy_static;
@@ -22,7 +22,7 @@ pub struct LinkFollowReplacer {
     #[serde(with = "serde_regex")]
     match_regex: Regex,
 
-    /// `destination_regex` requires `destination_replacement` be set
+    /// `destination_regex` requires `destination_replacement` be set.
     #[serde(with = "serde_regex")]
     #[serde(default)]
     destination_regex: Option<Regex>,
@@ -30,10 +30,16 @@ pub struct LinkFollowReplacer {
     #[serde(skip_serializing_if = "Option::is_none")]
     destination_replacement: Option<String>,
 
-    /// replace keys with values after link has been followed
+    /// replace keys with values after link has been followed.
     #[serde(skip_serializing_if = "Option::is_none")]
     post_replacement: Option<Vec<Replacements>>,
 
+    /// if the destination matches this regex it won't be included in the final message.    
+    ///
+    /// takes priority over destination_replacement and post_replacement, so if this applies those are skipped.
+    #[serde(with = "serde_regex")]
+    #[serde(default)]
+    bad_url_match: Option<Regex>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,23 +60,25 @@ lazy_static! {
 }
 
 
-// impl LinkFollowReplacer {
-//     pub fn new(
-//         name: String,
-//         match_regex: Regex,
-//         destination_regex: Option<Regex>,
-//         destination_replacement: Option<String>,
-//         post_replacement: Option<Vec<Replacements>>,
-//     ) -> Self {
-//         Self {
-//             name,
-//             match_regex,
-//             destination_regex,
-//             destination_replacement,
-//             post_replacement,
-//         }
-//     }
-// }
+impl LinkFollowReplacer {
+    pub fn new(
+        name: String,
+        match_regex: Regex,
+        destination_regex: Option<Regex>,
+        destination_replacement: Option<String>,
+        post_replacement: Option<Vec<Replacements>>,
+        bad_url_match: Option<Regex>,
+    ) -> Self {
+        Self {
+            name,
+            match_regex,
+            destination_regex,
+            destination_replacement,
+            post_replacement,
+            bad_url_match,
+        }
+    }
+}
 
 async fn visit_links(links: Vec<String>) -> Vec<anyhow::Result<String>> {
     futures::stream::iter(
@@ -108,28 +116,33 @@ impl StringReplacer for LinkFollowReplacer {
         let mut visited_links: Vec<String> = Vec::new();
 
         for result in results {
-            match result {
-                Ok(gotten_link) => {
-                    let mut link = gotten_link.clone();
+            if let Ok(gotten_link) = result {
+                let mut link = gotten_link.clone();
 
+                if let Some(bad_url_regex) = &self.bad_url_match {
+                    if bad_url_regex.is_match(&link) {
+                        debug!("{} matched bad_url_regex, skipping link", &link);
+                        continue;
+                    }
+                }
 
-                    if let Some(replacement_regex) = &self.destination_regex {
-                        let replacement = &self.destination_replacement.clone().unwrap();
-                        link = replacement_regex.replace_all(&link, replacement).to_string();
-                    } else if let Some(replacements) = &self.post_replacement {
-                        for replacement in replacements {
-                            if link.contains(&replacement.replace) {
-                                debug!("replacing {} with {} in {}", &replacement.replace, &replacement.with, &link);
-                                link = link.replace(replacement.replace.as_str(), replacement.with.as_str());
-                                debug!("replaced: {}", &link);
-                            }
+                if let Some(replacement_regex) = &self.destination_regex {
+                    let replacement = &self.destination_replacement.clone().unwrap();
+                    link = replacement_regex.replace_all(&link, replacement).to_string();
+                } else if let Some(replacements) = &self.post_replacement {
+                    for replacement in replacements {
+                        if link.contains(&replacement.replace) {
+                            debug!("replacing {} with {} in {}", &replacement.replace, &replacement.with, &link);
+                            link = link.replace(replacement.replace.as_str(), replacement.with.as_str());
+                            debug!("replaced: {}", &link);
                         }
                     }
-                    visited_links.push(link.to_string());
                 }
-                Err(err) => {
-                    return Err(anyhow!("error visiting link: {}", err));
-                }
+
+
+                visited_links.push(link.to_string());
+            } else if let Err(err) = result {
+                error!("error visiting link: {}", err);
             }
         }
 
