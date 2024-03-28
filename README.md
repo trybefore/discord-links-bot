@@ -76,7 +76,7 @@ https://www.instagram.com/reel/CztdYC8ryw7/?igshid=abcdefghujkl==
 Turns into
 
 ```
-https://www.ddinstagram.com/reel/CztdYC8ryw7
+https://insta.trybefore.dev/reel/CztdYC8ryw7
 ```
 
 #### TikTok
