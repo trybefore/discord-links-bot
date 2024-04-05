@@ -1,0 +1,30 @@
+---
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+  merge_group:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cargo-test:
+    name: "cargo test"
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: test
+        run: |
+          cargo test --features skip-link-followers

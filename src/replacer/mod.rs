@@ -118,6 +118,14 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
         if let Some(mut replacer) = get_replacer_by_name(&name)? {
             let mut test_count = 0;
             for test in tests {
+                match replacer {
+                    Replacer::LinkReplacer(_) => {
+                        if cfg!(feature = "skip-link-followers") {
+                            continue;
+                        }
+                    }
+                    _ => {}
+                }
                 test_count += 1;
                 let got = replacer.replace(&test.have).await.unwrap_or_else(|_| "".to_string());
                 let want = test.want.clone();
