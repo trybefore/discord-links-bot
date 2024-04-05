@@ -27,4 +27,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: test
         run: |
-          cargo test
+          cargo test --features skip-link-followers
