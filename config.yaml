@@ -5,8 +5,8 @@ replacers:
     replacement: https://vxtwitter.com/$2/status/$4
   - type: regex
     name: &shorts youtube_shorts
-    match_regex: https?://(?:www.)?youtube.com/shorts/(\w.*)
-    replacement: https://www.youtube.com/watch?v=$1
+    match_regex: https?://(?:www.)?youtube\.com/shorts/(?P<video_id>[^/?&]+)(?:\?(?P<query_params>.+))?
+    replacement: https://www.youtube.com/watch?v=${video_id}&${query_params}
   - type: regex
     name: &amazon amazon
     match_regex: https?://(.*)\.amazon\.(de|com|co\.uk).*/dp/(\w*)
@@ -88,9 +88,11 @@ tests:
   - replacer_name: *shorts
     tests:
       - have: https://www.youtube.com/shorts/u3juys4lq-E
-        want: https://www.youtube.com/watch?v=u3juys4lq-E
+        want: https://www.youtube.com/watch?v=u3juys4lq-E&
       - have: https://youtube.com/shorts/u3juys4lq-E
-        want: https://www.youtube.com/watch?v=u3juys4lq-E
+        want: https://www.youtube.com/watch?v=u3juys4lq-E&
+      - have: https://youtube.com/shorts/u3juys4lq-E?t=15
+        want: https://www.youtube.com/watch?v=u3juys4lq-E&t=15
   - replacer_name: *amazon
     tests:
       - have: https://www.amazon.com/dp/B09B1HMJ9Z/ref=as_li_ss_tl?ie=UTF8&smid=ATVPDKIKX0DER&th=1&linkCode=sl1&tag=sec2002-20
