@@ -1,5 +1,7 @@
+use std::sync::Arc;
 use std::time::Duration;
 use anyhow::{bail};
+use config::Config;
 use futures::StreamExt;
 use log::{debug, error, info};
 use serenity::all::{CreateAttachment, CreateMessage, EditMessage, Event, Message, Ready};
@@ -13,46 +15,57 @@ use crate::replacer::{ReplacerError};
 use crate::resource::{GUH, NOREG};
 
 
-pub(crate) struct Handler;
+pub(crate) struct Handler {
+    config: Arc<Config>,
+}
 
-
-pub async fn replace_discord_message(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
-    debug!("[{}] [{}] {}: {}", msg.guild_id.unwrap(), msg.channel_id, msg.author.name, &msg.content);
-    let start_time = Instant::now();
-
-    let new_message = match crate::replacer::replace_message(&msg.content).await {
-        Ok(msg) => msg,
-        Err(err) => {
-            match err.downcast_ref() {
-                Some(ReplacerError::NoReplacerFound) => {
-                    debug!("no replacer found for that message, ignoring it");
-                    return Ok(());
-                }
-                _ => { bail!("unexpected error: {}", err) }
-            }
+impl Handler {
+    pub fn new(config: Arc<Config>) -> Self {
+        Self {
+            config
         }
-    };
-
-    if new_message.is_empty() {
-        debug!("empty response message (should be okay if the link matched a bad_url_regex)");
-        return Ok(());
     }
 
-    let response = CreateMessage::new().content(&new_message).reference_message(msg).allowed_mentions(CreateAllowedMentions::new().replied_user(false));
-    debug!("replaced [{}] -> [{}]", &msg.content, &new_message);
 
+    pub async fn replace_discord_message(&self, ctx: &Context, msg: &Message) -> anyhow::Result<()> {
+        debug!("[{}] [{}] {}: {}", msg.guild_id.unwrap(), msg.channel_id, msg.author.name, &msg.content);
+        let start_time = Instant::now();
 
-    match msg.channel_id.send_message(&ctx.http, response).await {
-        Ok(_) => {
-            debug!("took {}ms to visit the links and send the message", start_time.elapsed().as_millis());
+        let new_message = match crate::replacer::replace_message(&msg.content, self.config.clone()).await {
+            Ok(msg) => msg,
+            Err(err) => {
+                match err.downcast_ref() {
+                    Some(ReplacerError::NoReplacerFound) => {
+                        debug!("no replacer found for that message, ignoring it");
+                        return Ok(());
+                    }
+                    _ => { bail!("unexpected error: {}", err) }
+                }
+            }
+        };
 
-            hide_embeds(&ctx, &mut msg.clone()).await?;
-
+        if new_message.is_empty() {
+            debug!("empty response message (should be okay if the link matched a bad_url_regex)");
             return Ok(());
         }
-        Err(err) => bail!(err)
+
+        let response = CreateMessage::new().content(&new_message).reference_message(msg).allowed_mentions(CreateAllowedMentions::new().replied_user(false));
+        debug!("replaced [{}] -> [{}]", &msg.content, &new_message);
+
+
+        match msg.channel_id.send_message(&ctx.http, response).await {
+            Ok(_) => {
+                debug!("took {}ms to visit the links and send the message", start_time.elapsed().as_millis());
+
+                hide_embeds(&ctx, &mut msg.clone()).await?;
+
+                return Ok(());
+            }
+            Err(err) => bail!(err)
+        }
     }
 }
+
 
 async fn hide_embeds(ctx: &Context, msg: &mut Message) -> anyhow::Result<()> {
     let msg_id = msg.id;
@@ -100,7 +113,7 @@ impl EventHandler for Handler {
             };
         }
 
-        if let Err(err) = replace_discord_message(&ctx, &msg).await {
+        if let Err(err) = self.replace_discord_message(&ctx, &msg).await {
             error!("failed to replace message: {}", err);
             return;
         }
