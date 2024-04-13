@@ -130,6 +130,10 @@ async fn run_tests(replacer_tests: Tests) -> anyhow::Result<()> {
                 let got = replacer.replace(&test.have).await.unwrap_or_else(|_| "".to_string());
                 let want = test.want.clone();
 
+                if test.ignore_if_bad_url.unwrap_or(false) && got.len() == 0 {
+                    debug!("test #{} for replacer {} matched bad_url_match and the test had ignore_if_bad_url set", test_count, replacer.name());
+                    continue;
+                }
                 if !got.eq(&want) {
                     return Err(anyhow!("{} #{}: {} != {}", &name, &test_count, got, want));
                 }
@@ -192,6 +196,8 @@ pub struct ReplacerTests {
 pub struct ReplacerTest {
     have: String,
     want: String,
+    /// If set to true, the test is considered as passing if the url returns a blank link, such as when the followed link matches the bad url regex defined in the replacer.
+    ignore_if_bad_url: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

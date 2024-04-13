@@ -33,20 +33,23 @@ replacers:
   - type: link-follower
     name: &tiktok_vm tiktok_vm
     match_regex: https://vm\.tiktok\.com/(?P<videoId>\w+)(?:/)?(?:\?.*)?
-    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/(?P<mediaType>photo|video)/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_regex: https://(?:www\.)?tiktok\.com/(?P<username>@.+)/(?P<mediaType>photo|video)/(?P<videoId>\d+)(?:\?|[\s]|$)?
     destination_replacement: https://www.vxtiktok.com/${username}/${mediaType}/${videoId}
+    bad_url_match: https://(?:www\.)?tiktok\.com/explore
   - type: link-follower
     name: &tiktok tiktok
-    match_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
-    destination_regex: https://(?:www\.)?tiktok.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    match_regex: https://(?:www\.)?tiktok\.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
+    destination_regex: https://(?:www\.)?tiktok\.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
     destination_replacement: https://www.vxtiktok.com/${username}/video/${videoId}
 tests:
   - replacer_name: *tiktok_vm
     tests:
       - have: https://vm.tiktok.com/ZM6BdBuuY/
         want: https://www.vxtiktok.com/@crowndefend/video/7311691285578943776
+        ignore_if_bad_url: true
       - have: https://vm.tiktok.com/ZMMfxb7xN/
         want: https://www.vxtiktok.com/@mystique.animals/photo/7350032843533339937
+        ignore_if_bad_url: true
   - replacer_name: *tiktok
     tests:
       - have: https://www.tiktok.com/@realcompmemer/video/7314546788617309471

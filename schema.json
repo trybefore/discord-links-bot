@@ -132,6 +132,11 @@
                 "want": {
                   "type": "string",
                   "description": "the url we want in return"
+                },
+                "ignore_if_bad_url": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If set to true, the test is considered as passing if the url returns a blank link, such as when the followed link matches the bad url regex defined in the replacer."
                 }
               },
               "required": [
