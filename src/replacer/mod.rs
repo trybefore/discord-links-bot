@@ -313,7 +313,7 @@ https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471";
     #[test]
     fn test_get_matching_replacers() {
         let config = create_config();
-        env_logger::builder().is_test(true).filter_level(Debug).init();
+        env_logger::builder().is_test(true).filter_level(Debug).try_init().unwrap_or(());
         let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
 https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4 "#.to_string();
         let matching_replacers = get_matching_replacers(&message, config).expect("could not read replacers from config");

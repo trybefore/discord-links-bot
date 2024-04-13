@@ -13,8 +13,8 @@ replacers:
     replacement: https://$1.amazon.$2/dp/$3
   - type: regex
     name: &instagram instagram
-    match_regex: http(s)://(\w{3}.)?instagram.com/reel(s)?/(?P<id>.*)/
-    replacement: https://insta.trybefore.dev/reel/${id}
+    match_regex: http(s)://(\w{3}.)?instagram\.com/(?P<type>(p|reel(s)?))/(?P<id>.*)/
+    replacement: https://insta.trybefore.dev/${type}/${id}
   - type: link-follower
     name: &reddit reddit
     match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
@@ -54,8 +54,10 @@ tests:
     tests:
       - have: https://www.tiktok.com/@realcompmemer/video/7314546788617309471
         want: https://www.vxtiktok.com/@realcompmemer/video/7314546788617309471
+        ignore_if_bad_url: true
       - have: https://www.tiktok.com/@butt.erhand/video/7310948082781375745
         want: https://www.vxtiktok.com/@butt.erhand/video/7310948082781375745
+        ignore_if_bad_url: true
   - replacer_name: *discord
     tests:
       - have: https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4
@@ -113,7 +115,9 @@ tests:
       - have: https://www.instagram.com/reel/CzmhWrGNL9u/?utm_source=ig_web_copy_link
         want: https://insta.trybefore.dev/reel/CzmhWrGNL9u
       - have: https://www.instagram.com/reels/CzmhWrGNL9u/
-        want: https://insta.trybefore.dev/reel/CzmhWrGNL9u
+        want: https://insta.trybefore.dev/reels/CzmhWrGNL9u
+      - have: https://www.instagram.com/p/C5s2dODM6wX/?hl=en
+        want: https://insta.trybefore.dev/p/C5s2dODM6wX
   - replacer_name: *reddit
     tests:
       - have: https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/#c867wpi
