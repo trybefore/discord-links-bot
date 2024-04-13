@@ -1,8 +1,10 @@
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 use clap::{Parser, Subcommand};
 
 
 use log::{debug, error, info};
+use crate::config::create;
 use crate::discordbot::create_client;
 use crate::replacer::run_replacer_tests;
 
@@ -32,18 +34,11 @@ enum Commands {
 async fn start() {
     let mut threads = Vec::new();
 
-    threads.push(tokio::spawn(async {
-        config::start_watcher();
-        debug!("");
-    }));
+    let mut config = Arc::new(config::create().unwrap());
 
-
-    let mut client = create_client().await.unwrap();
-    debug!("created client");
+    let mut client = create_client(config.clone()).await.unwrap();
 
     let shard_manager = client.shard_manager.clone();
-
-    debug!("cloned shard manager");
 
     let (tx, rx) = channel();
 
@@ -89,7 +84,8 @@ async fn main() -> anyhow::Result<()> {
 
     match args.command {
         Commands::Test { replacer_name } => {
-            match run_replacer_tests(replacer_name).await {
+            let config = Arc::new(create().expect("config file could not be read"));
+            match run_replacer_tests(replacer_name, config).await {
                 Ok(_) => {
                     info!("successfully ran tests")
                 }
