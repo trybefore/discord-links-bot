@@ -1,20 +1,9 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.75.0 AS chef
+FROM rust:alpine AS builder
 WORKDIR /app
-
-FROM chef AS planner
 COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-
-FROM chef AS builder 
-COPY --from=planner /app/recipe.json recipe.json
-# Build dependencies
-RUN cargo chef cook --release --recipe-path recipe.json
-
-# Build application
-COPY . .
+RUN apk add musl-dev libressl-dev pkgconfig elfutils perl make git
 RUN cargo build --release --bin discord-links-bot
 
-FROM buildpack-deps:bookworm AS runtime
-WORKDIR /app
+FROM alpine:latest AS runtime
 COPY --from=builder /app/target/release/discord-links-bot /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/discord-links-bot"]
