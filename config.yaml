@@ -13,7 +13,7 @@ replacers:
     replacement: https://$1.amazon.$2/dp/$3
   - type: regex
     name: &instagram instagram
-    match_regex: http(s)://(\w{3}.)?instagram\.com/(?P<type>(p|reel(s)?))/(?P<id>\w+)
+    match_regex: http(s)://(\w{3}.)?instagram\.com/(?P<type>(p|reel(s)?))/(?P<id>[^/]+)
     replacement: https://insta.trybefore.dev/${type}/${id}
   - type: link-follower
     name: &reddit reddit
