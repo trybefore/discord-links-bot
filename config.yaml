@@ -120,6 +120,8 @@ tests:
         want: https://insta.trybefore.dev/p/C5s2dODM6wX
       - have: https://www.instagram.com/reel/C7uWpC3xFal
         want: https://insta.trybefore.dev/reel/C7uWpC3xFal
+      - have: https://www.instagram.com/reel/C-BK562yFlu/?igsh=ZjNqbHdnY3k3d3Zv
+        want: https://insta.trybefore.dev/reel/C-BK562yFlu
       - have: https://www.instagram.com/reel/C9nElu7tjL_/?igsh=MThvODZ0bG1rcXl2Zw==
         want: https://insta.trybefore.dev/reel/C9nElu7tjL_
   - replacer_name: *reddit
