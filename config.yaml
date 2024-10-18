@@ -18,7 +18,7 @@ replacers:
   - type: regex
     name: &instagram instagram
     match_regex: http(s)://(\w{3}.)?instagram\.com/(?P<type>(p|reel(s)?))/(?P<id>[^/]+)
-    replacement: https://insta.trybefore.dev/${type}/${id}
+    replacement: https://ddinstagram.com/${type}/${id}
   - type: link-follower
     name: &reddit reddit
     match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?

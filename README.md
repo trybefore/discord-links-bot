@@ -12,7 +12,7 @@ Message embeds are hidden when possible.
 - [Amazon](#amazon) product links are trimmed down to the bare minimum required to visit the product page (hides link
   embed)
 - [Reddit](#reddit) links are trimmed of trackers, and replaced with rxddit
-- [Instagram](#instagram) links are embedded using insta.trybefore.dev (mirror of ddinstagram), removing any link trackers (only enabled for reels)
+- [Instagram](#instagram) links are embedded using ddinstagram.com, removing any link trackers (only works for reels)
 - [TikTok](#tiktok) links are stripped of trackers and embedded
 
 ### Examples
