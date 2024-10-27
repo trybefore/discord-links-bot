@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      - "patch*"
   pull_request:
   workflow_dispatch:
   merge_group:
