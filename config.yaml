@@ -46,6 +46,10 @@ replacers:
     match_regex: https://(?:www\.)?tiktok\.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
     destination_regex: https://(?:www\.)?tiktok\.com/(?P<username>@.+)/video/(?P<videoId>\d+)(?:\?|[\s]|$)?
     destination_replacement: https://www.tnktok.com/${username}/video/${videoId}
+  - type: regex
+    name: &twitch twitch
+    match_regex: http(?:s)://(?:w{3}\.)?(clips\.)?twitch\.tv/(?P<username>([A-z\d_]{3,25}))/clip/(?P<id>[A-z\d\-]+)(?P<extra>(\?filter=clips|(&range=(7d|24hr|30d|all))|&sort=time).*)* # Twitch usernames can be 2 characters in special cases, but I don't care
+    replacement: https://clips.twitch.tv/${id}
 tests:
   - replacer_name: *bluesky
     tests:
@@ -156,3 +160,11 @@ tests:
         want: https://rxddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/
       - have: https://old.reddit.com/r/nsfw # should resolve to something like https://old.reddit.com/over18?dest=https%3A%2F%2Fold.reddit.com%2Fr%2Fnsfw%2F
         want: https://old.reddit.com/r/nsfw
+  - replacer_name: *twitch
+    tests:
+      - have: https://www.twitch.tv/forsen/clip/BetterStormyDurianShadyLulu-Yh6K54GjqwN_ZaEW?filter=clips&range=30d&sort=time
+        want: https://clips.twitch.tv/BetterStormyDurianShadyLulu-Yh6K54GjqwN_ZaEW
+      - have: https://www.twitch.tv/thebausffs/clip/ViscousFamousKoupreySaltBae-kU1-FqCxFQyIMwHq
+        want: https://clips.twitch.tv/ViscousFamousKoupreySaltBae-kU1-FqCxFQyIMwHq
+      - have: https://www.twitch.tv/pajlada/clip/ExpensiveWonderfulClamArsonNoSexy
+        want: https://clips.twitch.tv/ExpensiveWonderfulClamArsonNoSexy
