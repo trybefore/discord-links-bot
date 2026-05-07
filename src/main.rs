@@ -1,18 +1,16 @@
-use std::sync::Arc;
-use std::sync::mpsc::channel;
 use clap::{Parser, Subcommand};
+use std::sync::mpsc::channel;
+use std::sync::Arc;
 
-
-use log::{debug, error, info};
 use crate::config::create;
 use crate::discordbot::create_client;
 use crate::replacer::run_replacer_tests;
+use log::{debug, error, info};
 
-mod replacer;
-mod discordbot;
 mod config;
+mod discordbot;
+mod replacer;
 mod resource;
-
 
 #[derive(Debug, Parser)]
 #[command(name = "linksbot")]
@@ -34,7 +32,7 @@ enum Commands {
 async fn start() {
     let mut threads = Vec::new();
 
-    let mut config = Arc::new(config::create().unwrap());
+    let config = Arc::new(config::create().unwrap());
 
     let mut client = create_client(config.clone()).await.unwrap();
 
@@ -46,7 +44,8 @@ async fn start() {
         debug!("got ctrl+c");
         tx.send(()).expect("failed to send signal on channel");
         debug!("sent signal on channel")
-    }).expect("error setting CTRL-C handler");
+    })
+    .expect("error setting CTRL-C handler");
 
     threads.push(tokio::spawn(async move {
         debug!("starting client...");
@@ -57,7 +56,6 @@ async fn start() {
 
         debug!("client stopped running");
     }));
-
 
     info!("press CTRL+C to exit");
     rx.recv().expect("failed to receive signal");
@@ -71,14 +69,12 @@ async fn start() {
     std::process::exit(0);
 }
 
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "discord_links_bot=info")
     }
     env_logger::init();
-
 
     let args = Cli::parse();
 
@@ -98,10 +94,14 @@ async fn main() -> anyhow::Result<()> {
             start().await;
         }
         Commands::Version {} => {
-            info!("{} {} @ {}", option_env!("GIT_TAG").unwrap_or(""), env!("GIT_HASH"), env!("COMMIT_DATE"));
+            info!(
+                "{} {} @ {}",
+                option_env!("GIT_TAG").unwrap_or(""),
+                env!("GIT_HASH"),
+                env!("COMMIT_DATE")
+            );
         }
     }
 
     Ok(())
 }
-

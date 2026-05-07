@@ -1,7 +1,6 @@
-use regex::Regex;
 use crate::replacer;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RegexReplacer {
@@ -11,33 +10,37 @@ pub struct RegexReplacer {
     replacement: String,
 }
 
-
 impl RegexReplacer {
+    #[allow(dead_code)]
     pub fn new(name: String, regex: String, replacement: String) -> Result<Self, regex::Error> {
-        let rgx = Regex::new(regex.clone().as_str())?;
+        let rgx = Regex::new(regex.as_str())?;
 
-        Ok(
-            Self {
-                match_regex: rgx,
-                replacement,
-                name,
-            }
-        )
+        Ok(Self {
+            match_regex: rgx,
+            replacement,
+            name,
+        })
     }
 }
 
 impl replacer::StringReplacer for RegexReplacer {
-    fn matches(&self, message: &String) -> bool {
-        self.match_regex.is_match(message.as_str())
+    fn matches(&self, message: &str) -> bool {
+        self.match_regex.is_match(message)
     }
 
-    async fn replace(&mut self, message: &String) -> anyhow::Result<String> {
+    async fn replace(&mut self, message: &str) -> anyhow::Result<String> {
         if !self.matches(message) {
             return Ok(message.to_string());
         }
-        let result: Vec<String> = self.match_regex.find_iter(message.as_str()).map(|link| {
-            self.match_regex.replace(link.as_str(), &self.replacement).to_string()
-        }).collect();
+        let result: Vec<String> = self
+            .match_regex
+            .find_iter(message)
+            .map(|link| {
+                self.match_regex
+                    .replace(link.as_str(), &self.replacement)
+                    .to_string()
+            })
+            .collect();
 
         Ok(result.join("\n"))
     }

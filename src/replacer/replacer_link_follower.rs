@@ -1,15 +1,13 @@
 use std::sync::Arc;
 use std::time::Duration;
-use anyhow::{anyhow, bail};
 
-use futures::{StreamExt};
+use futures::StreamExt;
 use lazy_static::lazy_static;
 use log::{debug, error};
 use regex::Regex;
-use reqwest::{StatusCode};
+use reqwest::StatusCode;
 use serde_derive::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
-
 
 use crate::replacer::StringReplacer;
 
@@ -48,19 +46,18 @@ pub struct Replacements {
     with: String,
 }
 
-
 lazy_static! {
     static ref CLIENT: Arc<reqwest::Client> = Arc::new(
         reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .user_agent("curl/4.0")
-        .build()
-        .unwrap()
+            .timeout(Duration::from_secs(10))
+            .user_agent("curl/4.0")
+            .build()
+            .unwrap()
     );
 }
 
-
 impl LinkFollowReplacer {
+    #[allow(dead_code)]
     pub fn new(
         name: String,
         match_regex: Regex,
@@ -81,35 +78,40 @@ impl LinkFollowReplacer {
 }
 
 async fn visit_links(links: Vec<String>) -> Vec<anyhow::Result<String>> {
-    futures::stream::iter(
-        links.into_iter().map(|link| {
-            async move {
-                let response = CLIENT.get(&link)
-                    .send()
-                    .await?;
-                if response.status() != StatusCode::OK {
-                    error!("status code not OK for link {}: {}", &link, response.status().to_string());
-                }
+    futures::stream::iter(links.into_iter().map(|link| async move {
+        let response = CLIENT.get(&link).send().await?;
+        if response.status() != StatusCode::OK {
+            error!(
+                "status code not OK for link {}: {}",
+                &link,
+                response.status().to_string()
+            );
+        }
 
-                let mut url = response.url().clone();
-                url.set_query(None);
-                Ok(url.to_string())
-            }
-        })
-    ).buffer_unordered(8).collect::<Vec<anyhow::Result<String>>>().await
+        let mut url = response.url().clone();
+        url.set_query(None);
+        Ok(url.to_string())
+    }))
+    .buffer_unordered(8)
+    .collect::<Vec<anyhow::Result<String>>>()
+    .await
 }
 
 impl StringReplacer for LinkFollowReplacer {
-    fn matches(&self, message: &String) -> bool {
+    fn matches(&self, message: &str) -> bool {
         self.match_regex.is_match(message)
     }
 
-    async fn replace(&mut self, message: &String) -> anyhow::Result<String> {
+    async fn replace(&mut self, message: &str) -> anyhow::Result<String> {
         if !self.matches(message) {
             return Ok(message.to_string());
         }
 
-        let links: Vec<String> = self.match_regex.find_iter(message.as_str()).map(|link| link.as_str().to_string()).collect();
+        let links: Vec<String> = self
+            .match_regex
+            .find_iter(message)
+            .map(|link| link.as_str().to_string())
+            .collect();
 
         let results = visit_links(links).await;
 
@@ -128,17 +130,22 @@ impl StringReplacer for LinkFollowReplacer {
 
                 if let Some(replacement_regex) = &self.destination_regex {
                     let replacement = &self.destination_replacement.clone().unwrap();
-                    link = replacement_regex.replace_all(&link, replacement).to_string();
+                    link = replacement_regex
+                        .replace_all(&link, replacement)
+                        .to_string();
                 } else if let Some(replacements) = &self.post_replacement {
                     for replacement in replacements {
                         if link.contains(&replacement.replace) {
-                            debug!("replacing {} with {} in {}", &replacement.replace, &replacement.with, &link);
-                            link = link.replace(replacement.replace.as_str(), replacement.with.as_str());
+                            debug!(
+                                "replacing {} with {} in {}",
+                                &replacement.replace, &replacement.with, &link
+                            );
+                            link = link
+                                .replace(replacement.replace.as_str(), replacement.with.as_str());
                             debug!("replaced: {}", &link);
                         }
                     }
                 }
-
 
                 visited_links.push(link.to_string());
             } else if let Err(err) = result {
@@ -146,10 +153,7 @@ impl StringReplacer for LinkFollowReplacer {
             }
         }
 
-
-        Ok(
-            visited_links.join("\n")
-        )
+        Ok(visited_links.join("\n"))
     }
 
     fn name(&self) -> &String {

@@ -1,0 +1,75 @@
+name: build-docker
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+env:
+  REGISTRY: codeberg.org
+  IMAGE: ${{ forgejo.repository }}
+
+jobs:
+  docker:
+    runs-on: codeberg-medium-lazy
+    container:
+      image: quay.io/buildah/stable:latest
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v4.2.0
+
+      - name: Compute tags + labels
+        id: meta
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"        # 1.2.3
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          CREATED="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          # Multi-line GITHUB_OUTPUT
+          {
+            echo "version=$VERSION"
+            echo "created=$CREATED"
+            echo "tags<<EOF"
+            echo "$VERSION"
+            echo "$MAJOR.$MINOR"
+            echo "$MAJOR"
+            echo "sha-$SHORT_SHA"
+            echo "latest"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Codeberg registry
+        run: |
+          buildah login \
+            --username "${{ forgejo.repository_owner }}" \
+            --password "${{ secrets.REGISTRY_TOKEN }}" \
+            "${REGISTRY}"
+
+      - name: Build image
+        run: |
+          set -euo pipefail
+          TAG_ARGS=()
+          while IFS= read -r t; do
+            [ -n "$t" ] && TAG_ARGS+=(--tag "${REGISTRY}/${IMAGE}:${t}")
+          done <<< "${{ steps.meta.outputs.tags }}"
+
+          buildah build \
+            --storage-driver=vfs \
+            --isolation=chroot \
+            --label "org.opencontainers.image.source=https://${REGISTRY}/${IMAGE}" \
+            --label "org.opencontainers.image.url=https://${REGISTRY}/${IMAGE}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${{ steps.meta.outputs.version }}" \
+            --label "org.opencontainers.image.created=${{ steps.meta.outputs.created }}" \
+            --label "org.opencontainers.image.title=$(basename "${IMAGE}")" \
+            "${TAG_ARGS[@]}" \
+            .
+
+      - name: Push image
+        run: |
+          set -euo pipefail
+          while IFS= read -r t; do
+            [ -n "$t" ] || continue
+            buildah push --storage-driver=vfs "${REGISTRY}/${IMAGE}:${t}"
+          done <<< "${{ steps.meta.outputs.tags }}"
