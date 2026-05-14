@@ -15,7 +15,7 @@ jobs:
       image: quay.io/buildah/stable:latest
     steps:
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v4.2.0
+        run: git clone --depth 1 -b "${GITHUB_REF_NAME}" "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
 
       - name: Compute tags + labels
         id: meta
