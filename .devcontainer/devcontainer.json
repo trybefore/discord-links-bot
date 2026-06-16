@@ -1,6 +1,8 @@
 {
   "name": "rust",
-  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "runArgs": [
     "--cap-add=NET_ADMIN",
     "--cap-add=NET_RAW"
@@ -13,7 +15,6 @@
     "source=target-${devcontainerId},target=${containerWorkspaceFolder}/target,type=volume",
     "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
   ],
-  "onCreateCommand": "sudo install -d -m 0755 /etc/apt/keyrings && sudo curl -fsSL https://downloads.claude.ai/keys/claude-code.asc -o /etc/apt/keyrings/claude-code.asc && echo 'deb [signed-by=/etc/apt/keyrings/claude-code.asc] https://downloads.claude.ai/claude-code/apt/stable stable main' | sudo tee /etc/apt/sources.list.d/claude-code.list && sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y claude-code iptables ipset dnsutils aggregate jq && sudo install -m 0755 .devcontainer/init-firewall.sh /usr/local/bin/init-firewall.sh",
   "postCreateCommand": "sudo chown -R vscode /usr/local/cargo/registry ${containerWorkspaceFolder}/target /home/vscode/.claude",
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
   "waitFor": "postStartCommand",
