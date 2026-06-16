@@ -29,6 +29,13 @@
             "description": "regex replacement format",
             "type": "string"
           },
+          "strip_params": {
+            "description": "query parameter names to remove from the replacement URL",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "destination_regex": {
             "description": "regex for replacing a followed link in a link-follower replacer",
             "type": "string"
