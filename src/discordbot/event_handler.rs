@@ -1,5 +1,5 @@
 use crate::replacer::ReplacerError;
-use crate::resource::{GUH, NOREG};
+use crate::resource::{GUH, NOREG, SCOTLAND};
 use anyhow::bail;
 use config::Config;
 use futures::StreamExt;
@@ -78,6 +78,15 @@ impl Handler {
     }
 }
 
+/// Returns true if `keyword` appears in `content` in at least one spot where it
+/// isn't immediately followed by an exclamation mark. An occurrence like `guh!`
+/// is treated as an opt-out and won't trigger a response on its own.
+fn mentions(content: &str, keyword: &str) -> bool {
+    content
+        .match_indices(keyword)
+        .any(|(idx, _)| !content[idx + keyword.len()..].starts_with('!'))
+}
+
 async fn hide_embeds(ctx: &Context, msg: &mut Message) -> anyhow::Result<()> {
     let msg_id = msg.id;
 
@@ -113,15 +122,24 @@ impl EventHandler for Handler {
         }
         let match_message = msg.content.to_lowercase();
 
-        if match_message.contains("guh") || match_message.contains("norway") {
+        let mentions_guh = mentions(&match_message, "guh");
+        let mentions_norway = mentions(&match_message, "norway");
+        let mentions_scotland = mentions(&match_message, "scotland");
+
+        if mentions_guh || mentions_norway || mentions_scotland {
             let mut response = CreateMessage::new();
 
-            if msg.content.to_lowercase().contains("guh") {
+            if mentions_guh {
                 response = response.add_file(CreateAttachment::bytes(GUH.to_vec(), "guh.gif"));
             }
 
-            if msg.content.to_lowercase().contains("norway") {
+            if mentions_norway {
                 response = response.add_file(CreateAttachment::bytes(NOREG.to_vec(), "norway.png"));
+            }
+
+            if mentions_scotland {
+                response =
+                    response.add_file(CreateAttachment::bytes(SCOTLAND.to_vec(), "scotland.jpg"));
             }
 
             response = response
