@@ -143,12 +143,6 @@ impl StringReplacer for LinkFollowReplacer {
                             link = link
                                 .replace(replacement.replace.as_str(), replacement.with.as_str());
                             debug!("replaced: {}", &link);
-                            // Only apply the first matching replacement. The rules are
-                            // mutually-exclusive host variants (www./old./bare reddit.com),
-                            // and the replacement (vxreddit.com/r/) still contains
-                            // "reddit.com/r/", so continuing would match it again and
-                            // produce "vxvxreddit.com/r/".
-                            break;
                         }
                     }
                 }
