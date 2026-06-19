@@ -458,6 +458,7 @@ dependencies = [
  "serenity",
  "thiserror",
  "tokio",
+ "url",
 ]
 
 [[package]]

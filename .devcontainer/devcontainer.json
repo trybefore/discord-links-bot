@@ -1,0 +1,22 @@
+{
+  "name": "rust",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "mounts": [
+    "source=cargo-registry-${devcontainerId},target=/usr/local/cargo/registry,type=volume",
+    "source=target-${devcontainerId},target=${containerWorkspaceFolder}/target,type=volume",
+    "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+  ],
+  "postCreateCommand": "sudo chown -R vscode /usr/local/cargo/registry ${containerWorkspaceFolder}/target /home/vscode/.claude",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand",
+  "remoteUser": "vscode"
+}

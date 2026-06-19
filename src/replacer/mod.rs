@@ -1,19 +1,17 @@
-mod replacer_regex;
 mod replacer_link_follower;
+mod replacer_regex;
 
-
-use std::sync::Arc;
-use std::time::Duration;
-use anyhow::{anyhow, bail};
-use config::Config;
-use log::{debug};
-use serde::{Deserialize};
-use serde_derive::Serialize;
-use thiserror::Error;
-use tokio::time::sleep;
 use crate::replacer::replacer_link_follower::LinkFollowReplacer;
 use crate::replacer::replacer_regex::RegexReplacer;
-
+use anyhow::{anyhow, bail};
+use config::Config;
+use log::debug;
+use serde::Deserialize;
+use serde_derive::Serialize;
+use std::sync::Arc;
+use std::time::Duration;
+use thiserror::Error;
+use tokio::time::sleep;
 
 pub async fn replace_message(message: &String, config: Arc<Config>) -> anyhow::Result<String> {
     let replacers = get_matching_replacers(message, config)?;
@@ -22,7 +20,7 @@ pub async fn replace_message(message: &String, config: Arc<Config>) -> anyhow::R
 
     for mut r in replacers {
         debug!("replacing {} with replacer {}", message, r.name());
-        let mut replaced_link = r.replace(&message).await?;
+        let mut replaced_link = r.replace(message).await?;
         if message.contains("||") {
             replaced_link = format!("||{}||", replaced_link);
         }
@@ -32,10 +30,16 @@ pub async fn replace_message(message: &String, config: Arc<Config>) -> anyhow::R
     Ok(links.join("\n"))
 }
 
-
-pub fn get_matching_replacers(message: &String, config: Arc<Config>) -> anyhow::Result<Vec<Replacer>> {
+pub fn get_matching_replacers(
+    message: &String,
+    config: Arc<Config>,
+) -> anyhow::Result<Vec<Replacer>> {
     debug!("checking message: {}", message);
-    let mut replacers: Vec<Replacer> = get_replacers(config)?.0.into_iter().filter(|r| r.matches(message)).collect();
+    let mut replacers: Vec<Replacer> = get_replacers(config)?
+        .0
+        .into_iter()
+        .filter(|r| r.matches(message))
+        .collect();
 
     /*
     return if !r.matches(message) {
@@ -44,7 +48,7 @@ pub fn get_matching_replacers(message: &String, config: Arc<Config>) -> anyhow::
     } else { true }
      */
 
-    if replacers.len() == 0 {
+    if replacers.is_empty() {
         debug!("found no replacers by that message");
         bail!(ReplacerError::NoReplacerFound)
     }
@@ -52,7 +56,6 @@ pub fn get_matching_replacers(message: &String, config: Arc<Config>) -> anyhow::
     for x in &replacers {
         debug!("found replacer: {}", x.name());
     }
-
 
     replacers.sort_by_key(|r| r.name().clone()); // sort alphabetically, for consistent test results
     Ok(replacers)
@@ -68,35 +71,37 @@ fn get_replacers(config: Arc<Config>) -> anyhow::Result<Replacers> {
 }
 
 /// get replacer by name, if it exists
-pub fn get_replacer_by_name(name: &String, config: Arc<Config>) -> anyhow::Result<Option<Replacer>> {
+pub fn get_replacer_by_name(
+    name: &String,
+    config: Arc<Config>,
+) -> anyhow::Result<Option<Replacer>> {
     let replacers = get_replacers(config)?;
-    let result = replacers.0.into_iter().filter_map(|r| {
-        if r.name().eq(name) { Some(r) } else { None }
-    }).last();
+    let result = replacers
+        .0
+        .into_iter()
+        .filter_map(|r| if r.name().eq(name) { Some(r) } else { None })
+        .last();
 
-
-    Ok(
-        result
-    )
+    Ok(result)
 }
 
 /// get all tests in config.yaml
 pub fn get_tests(config: Arc<Config>) -> anyhow::Result<Tests> {
-    Ok(
-        config.get::<Tests>("tests")?
-    )
+    Ok(config.get::<Tests>("tests")?)
 }
 
 /// get tests for replacer, if it has any
 pub fn get_tests_by_name(replacer_name: String, config: Arc<Config>) -> anyhow::Result<Tests> {
     let tests = get_tests(config)?.filter_by_replacer_name(replacer_name);
 
-
     Ok(tests)
 }
 
 /// run tests for replacer_name if provided, all replacers if `None`
-pub async fn run_replacer_tests(replacer_name: Option<String>, config: Arc<Config>) -> anyhow::Result<()> {
+pub async fn run_replacer_tests(
+    replacer_name: Option<String>,
+    config: Arc<Config>,
+) -> anyhow::Result<()> {
     let replacer_tests: Tests;
 
     if let Some(name) = replacer_name {
@@ -113,26 +118,30 @@ pub async fn run_replacer_tests(replacer_name: Option<String>, config: Arc<Confi
 async fn run_tests(replacer_tests: Tests, config: Arc<Config>) -> anyhow::Result<()> {
     debug!("running tests for {} replacers", replacer_tests.0.len());
     for replacer in replacer_tests.0 {
-        debug!("running {} tests for replacer {}", replacer.replacer_name, replacer.tests.len());
+        debug!(
+            "running {} tests for replacer {}",
+            replacer.replacer_name,
+            replacer.tests.len()
+        );
         let name = &replacer.replacer_name;
         let tests = &replacer.tests;
 
-        if let Some(mut replacer) = get_replacer_by_name(&name, config.clone())? {
+        if let Some(mut replacer) = get_replacer_by_name(name, config.clone())? {
             let mut test_count = 0;
             for test in tests {
-                match replacer {
-                    Replacer::LinkReplacer(_) => {
-                        if cfg!(feature = "skip-link-followers") {
-                            continue;
-                        }
+                if let Replacer::LinkReplacer(_) = replacer {
+                    if cfg!(feature = "skip-link-followers") {
+                        continue;
                     }
-                    _ => {}
                 }
                 test_count += 1;
-                let got = replacer.replace(&test.have).await.unwrap_or_else(|_| "".to_string());
+                let got = replacer
+                    .replace(&test.have)
+                    .await
+                    .unwrap_or_else(|_| "".to_string());
                 let want = test.want.clone();
 
-                if test.ignore_if_bad_url.unwrap_or(false) && got.len() == 0 {
+                if test.ignore_if_bad_url.unwrap_or(false) && got.is_empty() {
                     debug!("test #{} for replacer {} matched bad_url_match and the test had ignore_if_bad_url set", test_count, replacer.name());
                     continue;
                 }
@@ -150,11 +159,10 @@ async fn run_tests(replacer_tests: Tests, config: Arc<Config>) -> anyhow::Result
     Ok(())
 }
 
-
 #[derive(Error, Debug)]
 pub enum ReplacerError {
     #[error("Could not find any matching replacers")]
-    NoReplacerFound
+    NoReplacerFound,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -164,27 +172,30 @@ impl Tests {
     fn filter_by_replacer_name(&self, name: String) -> Tests {
         let old_tests = self.0.clone();
 
-        let tests = old_tests.into_iter().filter_map(|r| {
-            if r.replacer_name.eq(&name) { Some(r) } else { None }
-        }).collect::<Vec<ReplacerTests>>();
+        let tests = old_tests
+            .into_iter()
+            .filter_map(|r| {
+                if r.replacer_name.eq(&name) {
+                    Some(r)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<ReplacerTests>>();
 
-        let result = Tests(tests);
-
-
-        result
+        Tests(tests)
     }
 }
 
 impl FromIterator<ReplacerTests> for Tests {
-    fn from_iter<T: IntoIterator<Item=ReplacerTests>>(iter: T)
-                                                      -> Self {
+    fn from_iter<T: IntoIterator<Item = ReplacerTests>>(iter: T) -> Self {
         let mut c = Vec::new();
 
         for tests in iter {
             c.push(tests.clone());
         }
 
-        Self { 0: c }
+        Self(c)
     }
 }
 
@@ -212,24 +223,24 @@ pub enum Replacer {
 }
 
 impl StringReplacer for Replacer {
-    fn matches(&self, message: &String) -> bool {
+    fn matches(&self, message: &str) -> bool {
         match self {
             Replacer::Regex(r) => r.matches(message),
-            Replacer::LinkReplacer(r) => r.matches(message)
+            Replacer::LinkReplacer(r) => r.matches(message),
         }
     }
 
-    async fn replace(&mut self, message: &String) -> anyhow::Result<String> {
+    async fn replace(&mut self, message: &str) -> anyhow::Result<String> {
         match self {
             Replacer::Regex(r) => r.replace(message).await,
-            Replacer::LinkReplacer(r) => r.replace(message).await
+            Replacer::LinkReplacer(r) => r.replace(message).await,
         }
     }
 
     fn name(&self) -> &String {
         match self {
             Replacer::Regex(r) => r.name(),
-            Replacer::LinkReplacer(r) => r.name()
+            Replacer::LinkReplacer(r) => r.name(),
         }
     }
 }
@@ -239,37 +250,48 @@ pub struct Replacers(pub(crate) Vec<Replacer>);
 
 pub trait StringReplacer {
     /// check if replacer has any matches for message
-    fn matches(&self, message: &String) -> bool;
+    fn matches(&self, message: &str) -> bool;
     /// replace occurrences in message, if applicable
-    async fn replace(&mut self, message: &String) -> anyhow::Result<String>;
+    async fn replace(&mut self, message: &str) -> anyhow::Result<String>;
 
     /// name of the replacer
     fn name(&self) -> &String;
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use config::Config;
-    use log::{debug, info};
     use log::LevelFilter::Debug;
+    use log::{debug, info};
+    use std::sync::Arc;
 
     use crate::replacer::replacer_regex::RegexReplacer;
-    use crate::replacer::{Replacers, Replacer, run_replacer_tests, get_matching_replacers, StringReplacer, replace_message};
+    use crate::replacer::{
+        get_matching_replacers, replace_message, run_replacer_tests, Replacer, Replacers,
+        StringReplacer,
+    };
 
     #[test]
     fn serialize_test() {
-        let replacer = RegexReplacer::new("twitter".to_string(), r"https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)".to_string(), "https://vxtwitter.com/$2/status/$4".to_string()).unwrap();
+        let replacer = RegexReplacer::new(
+            "twitter".to_string(),
+            r"https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)".to_string(),
+            "https://vxtwitter.com/$2/status/$4".to_string(),
+        )
+        .unwrap();
         let replacers = Replacers(vec![Replacer::Regex(replacer)]);
-
 
         println!("{:?}", replacers);
     }
 
     #[test]
     fn deserialize_test() {
-        let replacer = RegexReplacer::new("twitter".to_string(), r"https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)".to_string(), "https://vxtwitter.com/$2/status/$4".to_string()).unwrap();
+        let replacer = RegexReplacer::new(
+            "twitter".to_string(),
+            r"https?://(?P<tld>twitter|x)\.com/(?:#!/)?(\w+)/status(es)?/(\d+)".to_string(),
+            "https://vxtwitter.com/$2/status/$4".to_string(),
+        )
+        .unwrap();
         let replacers = Replacers(vec![Replacer::Regex(replacer)]);
 
         let want_yaml = r"- type: regex
@@ -291,14 +313,21 @@ mod tests {
     async fn run_file_tests() {
         let config = create_config();
         let result = run_replacer_tests(None, config).await;
-        assert!(result.is_ok(), "failed to run tests: {:?}", result.err().unwrap())
+        assert!(
+            result.is_ok(),
+            "failed to run tests: {:?}",
+            result.err().unwrap()
+        )
     }
 
     #[tokio::test]
     #[cfg(not(feature = "skip-link-followers"))]
     async fn test_replace_message() {
         let config = create_config();
-        _ = env_logger::builder().is_test(true).filter_level(Debug).try_init();
+        _ = env_logger::builder()
+            .is_test(true)
+            .filter_level(Debug)
+            .try_init();
         let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
 https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4"#.to_string();
 
@@ -314,7 +343,10 @@ https://www.tnktok.com/@realcompmemer/video/7314546788617309471";
     #[tokio::test]
     async fn test_replace_message_discord() {
         let config = create_config();
-        _ = env_logger::builder().is_test(true).filter_level(Debug).try_init();
+        _ = env_logger::builder()
+            .is_test(true)
+            .filter_level(Debug)
+            .try_init();
         let message = r#"https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4"#.to_string();
 
         let new_message = replace_message(&message, config).await.unwrap();
@@ -328,19 +360,27 @@ https://www.tnktok.com/@realcompmemer/video/7314546788617309471";
     #[test]
     fn test_get_matching_replacers() {
         let config = create_config();
-        env_logger::builder().is_test(true).filter_level(Debug).try_init().unwrap_or(());
+        env_logger::builder()
+            .is_test(true)
+            .filter_level(Debug)
+            .try_init()
+            .unwrap_or(());
         let message = r#"https://www.tiktok.com/@realcompmemer/video/7314546788617309471
 https://media.discordapp.net/attachments/483348725704556557/1065345579762335915/v12044gd0000cf3g5rrc77u1ikgnhp8g.mp4 "#.to_string();
-        let matching_replacers = get_matching_replacers(&message, config).expect("could not read replacers from config");
+        let matching_replacers =
+            get_matching_replacers(&message, config).expect("could not read replacers from config");
 
-        assert!(matching_replacers.len() > 0);
+        assert!(!matching_replacers.is_empty());
 
-        let discord_name = matching_replacers.get(0).unwrap().name();
+        let discord_name = matching_replacers.first().unwrap().name();
         let tiktok_name = matching_replacers.get(1).unwrap().name();
 
-        debug!("discord_name = {} tiktok_name = {}", discord_name, tiktok_name);
+        debug!(
+            "discord_name = {} tiktok_name = {}",
+            discord_name, tiktok_name
+        );
 
-        assert!(matching_replacers.get(0).unwrap().name().eq("discord"));
+        assert!(matching_replacers.first().unwrap().name().eq("discord"));
         assert!(matching_replacers.get(1).unwrap().name().eq("tiktok"))
     }
 }
