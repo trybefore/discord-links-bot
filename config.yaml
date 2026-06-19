@@ -26,12 +26,15 @@ replacers:
     name: &reddit reddit
     match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
     bad_url_match: http(s)?://((old|www)\.)?reddit\.com/over18.*
+    # Anchor on the // host boundary so the replacement (//vxreddit.com/r/)
+    # can't be re-matched by the bare reddit.com/r/ rule, which would turn
+    # www./old. links into vxvxreddit.com/r/.
     post_replacement:
-      - replace: www.reddit.com/r/
-        with: &reddit_replacement vxreddit.com/r/
-      - replace: old.reddit.com/r/
+      - replace: //www.reddit.com/r/
+        with: &reddit_replacement //vxreddit.com/r/
+      - replace: //old.reddit.com/r/
         with: *reddit_replacement
-      - replace: reddit.com/r/
+      - replace: //reddit.com/r/
         with: *reddit_replacement
   - type: regex
     name: &discord discord
