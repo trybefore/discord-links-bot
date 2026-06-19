@@ -11,7 +11,7 @@ Message embeds are hidden when possible.
   for now)
 - [Amazon](#amazon) product links are trimmed down to the bare minimum required to visit the product page (hides link
   embed)
-- [Reddit](#reddit) links are trimmed of trackers, and replaced with rxddit
+- [Reddit](#reddit) links are trimmed of trackers, and replaced with vxreddit
 - [Instagram](#instagram) links are embedded using kkinstagram.com, removing any link trackers (only works for reels)
 - [TikTok](#tiktok) links are stripped of trackers and embedded
 
@@ -64,7 +64,7 @@ https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_config
 Turns into
 
 ```
-https://rxddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+https://vxreddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
 ```
 
 #### Instagram
