@@ -16,7 +16,7 @@ jobs:
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: |
-            ghcr.io/daniel-boman/discord-links-bot
+            ghcr.io/trybefore/discord-links-bot
           tags: |
             type=ref,event=branch
             type=ref,event=pr
