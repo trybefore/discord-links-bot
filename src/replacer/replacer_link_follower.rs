@@ -75,6 +75,39 @@ impl LinkFollowReplacer {
             bad_url_match,
         }
     }
+
+    /// Apply `bad_url_match`, then `destination_regex` or `post_replacement`,
+    /// to a link that has already been followed to its destination.
+    ///
+    /// Returns `None` if the destination matched `bad_url_match`.
+    fn replace_destination(&self, link: &str) -> Option<String> {
+        if let Some(bad_url_regex) = &self.bad_url_match {
+            if bad_url_regex.is_match(link) {
+                debug!("{} matched bad_url_regex, skipping link", link);
+                return None;
+            }
+        }
+
+        let mut link = link.to_string();
+
+        if let Some(replacement_regex) = &self.destination_regex {
+            let replacement = &self.destination_replacement.clone().unwrap();
+            link = replacement_regex.replace_all(&link, replacement).to_string();
+        } else if let Some(replacements) = &self.post_replacement {
+            for replacement in replacements {
+                if link.contains(&replacement.replace) {
+                    debug!(
+                        "replacing {} with {} in {}",
+                        &replacement.replace, &replacement.with, &link
+                    );
+                    link = link.replace(replacement.replace.as_str(), replacement.with.as_str());
+                    debug!("replaced: {}", &link);
+                }
+            }
+        }
+
+        Some(link)
+    }
 }
 
 async fn visit_links(links: Vec<String>) -> Vec<anyhow::Result<String>> {
@@ -118,38 +151,13 @@ impl StringReplacer for LinkFollowReplacer {
         let mut visited_links: Vec<String> = Vec::new();
 
         for result in results {
-            if let Ok(gotten_link) = result {
-                let mut link = gotten_link.clone();
-
-                if let Some(bad_url_regex) = &self.bad_url_match {
-                    if bad_url_regex.is_match(&link) {
-                        debug!("{} matched bad_url_regex, skipping link", &link);
-                        continue;
+            match result {
+                Ok(gotten_link) => {
+                    if let Some(link) = self.replace_destination(&gotten_link) {
+                        visited_links.push(link);
                     }
                 }
-
-                if let Some(replacement_regex) = &self.destination_regex {
-                    let replacement = &self.destination_replacement.clone().unwrap();
-                    link = replacement_regex
-                        .replace_all(&link, replacement)
-                        .to_string();
-                } else if let Some(replacements) = &self.post_replacement {
-                    for replacement in replacements {
-                        if link.contains(&replacement.replace) {
-                            debug!(
-                                "replacing {} with {} in {}",
-                                &replacement.replace, &replacement.with, &link
-                            );
-                            link = link
-                                .replace(replacement.replace.as_str(), replacement.with.as_str());
-                            debug!("replaced: {}", &link);
-                        }
-                    }
-                }
-
-                visited_links.push(link.to_string());
-            } else if let Err(err) = result {
-                error!("error visiting link: {}", err);
+                Err(err) => error!("error visiting link: {}", err),
             }
         }
 
@@ -158,5 +166,57 @@ impl StringReplacer for LinkFollowReplacer {
 
     fn name(&self) -> &String {
         &self.name
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::LinkFollowReplacer;
+    use crate::replacer::{get_replacer_by_name, Replacer, StringReplacer};
+
+    fn link_follower(name: &str) -> LinkFollowReplacer {
+        let config = Arc::new(crate::config::create().unwrap());
+        match get_replacer_by_name(&name.to_string(), config).unwrap() {
+            Some(Replacer::LinkReplacer(r)) => r,
+            _ => panic!("no link-follower replacer named {}", name),
+        }
+    }
+
+    #[test]
+    fn reddit_share_only_matches_app_share_links() {
+        let replacer = link_follower("reddit_share");
+
+        assert!(replacer.matches("https://reddit.com/r/pchelp/s/GPxofho2iY/"));
+        assert!(replacer.matches("https://www.reddit.com/r/computers/s/BN4uCFXFyC"));
+        assert!(!replacer.matches(
+            "https://www.reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/"
+        ));
+    }
+
+    #[test]
+    fn reddit_share_rewrites_destination_to_vxreddit() {
+        let replacer = link_follower("reddit_share");
+
+        assert_eq!(
+            replacer.replace_destination(
+                "https://www.reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/"
+            ),
+            Some(
+                "https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/"
+                    .to_string()
+            )
+        );
+        // reddit bounces links it doesn't want to serve to an interstitial,
+        // which must never be posted in place of the original link
+        assert_eq!(
+            replacer.replace_destination("https://www.reddit.com/login/"),
+            None
+        );
+        assert_eq!(
+            replacer.replace_destination("https://old.reddit.com/over18/"),
+            None
+        );
     }
 }

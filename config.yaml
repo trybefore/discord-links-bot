@@ -22,20 +22,22 @@ replacers:
     name: &instagram instagram
     match_regex: http(s)://(\w{3}.)?instagram\.com/(?P<type>(p|reel(?:s)?))/(?P<id>[^/\s]+)
     replacement: https://kkinstagram.com/reel/${id}
-  - type: link-follower
+  # Regular reddit links carry the submission id already, so rewrite them
+  # straight to vxreddit. Following them only lands on a login interstitial
+  # these days, which is what ended up getting posted.
+  - type: regex
     name: &reddit reddit
-    match_regex: http(s)?://((old|www)\.)?reddit\.com/(?:r/)+(?P<subreddit>[^/]+)/(comments/|s/)?(?P<submission>\w{5,12})(?P<title>/\w+/)?(?P<comment>\w{3,9}(/)?)?
-    bad_url_match: http(s)?://((old|www)\.)?reddit\.com/over18.*
-    # Anchor on the // host boundary so the replacement (//vxreddit.com/r/)
-    # can't be re-matched by the bare reddit.com/r/ rule, which would turn
-    # www./old. links into vxvxreddit.com/r/.
-    post_replacement:
-      - replace: //www.reddit.com/r/
-        with: &reddit_replacement //vxreddit.com/r/
-      - replace: //old.reddit.com/r/
-        with: *reddit_replacement
-      - replace: //reddit.com/r/
-        with: *reddit_replacement
+    match_regex: https?://(?:[a-z0-9-]+\.)?reddit\.com/(?P<path>r/[^\s/?#]+/comments/[^\s?#|<>]+)
+    replacement: https://vxreddit.com/${path}
+  # Links shared from the reddit mobile app (/r/<subreddit>/s/<id>) don't
+  # contain the submission id, so they still have to be followed to find the
+  # real permalink.
+  - type: link-follower
+    name: &reddit_share reddit_share
+    match_regex: https?://(?:[a-z0-9-]+\.)?reddit\.com/r/[^\s/?#]+/s/\w+/?
+    destination_regex: https?://(?:[a-z0-9-]+\.)?reddit\.com/(?P<path>r/[^\s?#]+)
+    destination_replacement: https://vxreddit.com/${path}
+    bad_url_match: https?://(?:[a-z0-9-]+\.)?reddit\.com/(?:over18|login)
   - type: regex
     name: &discord discord
     match_regex: https?://media\.discordapp\.net/attachments/(\d+)/(\d+)/(.*[^.gif].$)
@@ -158,17 +160,29 @@ tests:
       - have: https://www.reddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/#c867wpi
         want: https://vxreddit.com/r/WTF/comments/17j3sd/this_crawled_into_one_of_my_students_pool_and_she/c867wpi/
       - have: https://www.reddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13
-        want: https://vxreddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13/
+        want: https://vxreddit.com/r/reddit.com/comments/17863/two_countries_one_booming_one_struggling_which/c13
       - have: https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i
         want: https://vxreddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i
       - have: https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration?baba123=dafsdfasdf
-        want: https://vxreddit.com/r/truetf2/comments/107nizk/
+        want: https://vxreddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration
+      - have: https://www.reddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/?utm_medium=ios_app
+        want: https://vxreddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
+      - have: https://reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+        want: https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+      # mobile app share links are left to the reddit_share replacer, and plain
+      # subreddit links aren't matched at all - both come back untouched here.
+      - have: https://reddit.com/r/computers/s/BN4uCFXFyC
+        want: https://reddit.com/r/computers/s/BN4uCFXFyC
+      - have: https://old.reddit.com/r/nsfw
+        want: https://old.reddit.com/r/nsfw
+  - replacer_name: *reddit_share
+    tests:
       - have: https://reddit.com/r/pchelp/s/GPxofho2iY/
         want: https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+        ignore_if_bad_url: true
       - have: https://reddit.com/r/computers/s/BN4uCFXFyC
         want: https://vxreddit.com/r/computers/comments/16o6g5r/how_much_dose_my_pc_worth/
-      - have: https://old.reddit.com/r/nsfw # should resolve to something like https://old.reddit.com/over18?dest=https%3A%2F%2Fold.reddit.com%2Fr%2Fnsfw%2F
-        want: https://old.reddit.com/r/nsfw
+        ignore_if_bad_url: true
   - replacer_name: *twitch
     tests:
       - have: https://www.twitch.tv/forsen/clip/BetterStormyDurianShadyLulu-Yh6K54GjqwN_ZaEW?filter=clips&range=30d&sort=time
