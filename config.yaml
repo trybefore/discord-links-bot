@@ -27,7 +27,7 @@ replacers:
   # these days, which is what ended up getting posted.
   - type: regex
     name: &reddit reddit
-    match_regex: https?://(?:[a-z0-9-]+\.)?reddit\.com/(?P<path>r/[^\s/?#]+/comments/[^\s?#|<>]+)
+    match_regex: https?://(?:[a-z0-9-]+\.)?reddit\.com/(?P<path>r/[^\s/?#]+/comments/\w+(?:/\w+){0,2}/?)
     replacement: https://vxreddit.com/${path}
   # Links shared from the reddit mobile app (/r/<subreddit>/s/<id>) don't
   # contain the submission id, so they still have to be followed to find the
@@ -169,6 +169,11 @@ tests:
         want: https://vxreddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
       - have: https://reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
         want: https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+      # discord markdown wrapped around the link
+      - have: "[post](https://old.reddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/)"
+        want: https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+      - have: "**https://old.reddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i**"
+        want: https://vxreddit.com/r/switcharoo/comments/u24xnc/bond_girl_vs_james_bond/j3g066i
       # mobile app share links are left to the reddit_share replacer, and plain
       # subreddit links aren't matched at all - both come back untouched here.
       - have: https://reddit.com/r/computers/s/BN4uCFXFyC
