@@ -67,6 +67,19 @@ Turns into
 https://vxreddit.com/r/truetf2/comments/107nizk/what_makes_a_lot_of_the_configuration/
 ```
 
+Links shared from the reddit mobile app don't contain the submission id, so those are
+followed to their permalink first
+
+```
+https://reddit.com/r/pchelp/s/GPxofho2iY
+```
+
+Turns into
+
+```
+https://vxreddit.com/r/pchelp/comments/167kev4/i_kinda_messed_up_should_i_redo_it/
+```
+
 #### Instagram
 
 ```
